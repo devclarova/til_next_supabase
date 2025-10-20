@@ -1,9 +1,9 @@
-import TestComponent from "@/components/TestComponents";
+import ButtonTest from '@/components/ButtonTest';
 
 export default function Home() {
   return (
     <div>
-      <TestComponent title='안녕하세요.'  />
+      <ButtonTest />
     </div>
   );
 }

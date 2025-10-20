@@ -1,643 +1,499 @@
-# SCSS
+# Next.js 프로젝트 생성
+
+## 1. 프로젝트 생성
+
+```bash
+npx create-next-app@latest .
+```
+
+## 2. 프로젝트 생성 옵션
+
+```bash
+√ Which linter would you like to use? » ESLint
+√ Would you like to use Tailwind CSS? ... Yes
+√ Would you like your code inside a `src/` directory? ... Yes
+√ Would you like to use App Router? (recommended) ... Yes
+√ Would you like to use Turbopack? (recommended) ... No
+√ Would you like to customize the import alias (`@/*` by default)? ... Yes
+√ What import alias would you like configured? ... @/*
+```
+
+## 3. Tailwind 환경 설정
+
+- package.json 에서 `tailwind 버전` 확인
+- 아래 처럼 버전이 최신 `4.x` 버전 확인
+
+```json
+ "tailwindcss": "^4",
+```
+
+### 3.1. `postcss.config.mjs` 설정 확인
+
+```mjs
+const config = {
+  plugins: ['@tailwindcss/postcss'],
+};
+
+export default config;
+```
+
+### 3.2. `tailwind.config.ts` 파일 생성
+
+- Tailwind 경로 및 Theme 설정, Plugin 추가, Dark Mode, CSS 변수 연결
+
+```ts
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  // 1. 컨텐츠 경로: Tailwind가 클래스를 찾을 파일 경로
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      // 2. 커스텀 색상: CSS 변수와 연결된 색상 정의
+      colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+      },
+      // 3. 커스텀 폰트: 프로젝트에서 사용할 폰트 패밀리 정의
+      fontFamily: {
+        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
+      },
+    },
+  },
+  // 4. 플러그인: 추가 기능을 위한 플러그인 배열
+  plugins: [],
+};
+
+export default config;
+```
+
+### 3.3. global.css 설정
+
+- Next.js 의 모든 컴포넌트들이 참조하는 글로벌 css
+- `/src/app/global.css` 업데이트
+- 반드시 `@import 는 css 첫줄`이여야 함.
+- tailwind 4.x 버전이므로 `@import "tailwindcss";`
+
+```css
+@import 'tailwindcss';
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+```
+
+## 4. Prettier
+
+## 4. Prettier 설정
+
+- Prettier 는 코드 포맷터로, 일관된 코드 스타일을 자동으로 유지함.
+
+### 4.1. 설치
+
+- `Prettier - Code formatter 설치` 확장프로그램 필요
+
+```bash
+npm install --save-dev prettier
+```
+
+### 4.2. `/.prettierrc` 파일 생성
+
+- 포멧팅 규칙 정의 설정
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "useTabs": false,
+  "printWidth": 80,
+  "endOfLine": "lf",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "htmlWhitespaceSensitivity": "css",
+  "jsxSingleQuote": true,
+  "proseWrap": "preserve",
+  "embeddedLanguageFormatting": "auto",
+  "singleAttributePerLine": false
+}
+```
+
+### 4.3. `/.prettierignore` 파일 생성
+
+- 포멧팅에서 제외할 파일들을 명시함.
+
+```txt
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Generated files
+*.min.js
+*.min.css
+*.bundle.js
+*.bundle.css
+
+# Documentation
+CHANGELOG.md
+LICENSE
+# README.md
+
+# Config files that should not be formatted
+*.config.js
+*.config.mjs
+*.config.ts
+```
+
+### 4.4. 명령어로 포멧팅을 한번에 실행하도록 스크립트 작성(선택)
+
+- `package.json`에 Script 추가
+
+```json
+"scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:staged": "prettier --write --ignore-unknown"
+  }
+```
+
+## 5. ESLint 설정
+
+- 코드 품질 검사 도구
+
+### 5.1. `eslint.config.mjs` 설정
+
+```mjs
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+
+// Prettier 플러그인 추가
+import eslintPluginPrettier from 'eslint-plugin-prettier';
+import eslintConfigPrettier from 'eslint-config-prettier';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends('next/core-web-vitals', 'next/typescript', 'prettier'),
+  {
+    plugins: {
+      prettier: eslintPluginPrettier, //  Prettier 플러그인 추가
+    },
+    rules: {
+      ...eslintConfigPrettier.rules, //  Prettier와 충돌하는 ESLint 규칙 비활성화
+      'prettier/prettier': ['warn', { endOfLine: 'auto' }], //  Prettier 스타일을 강제 적용 (오류 발생 시 ESLint에서 표시)
+      '@typescript-eslint/no-unused-vars': 'warn', //  기존 TypeScript 규칙 유지
+      '@typescript-eslint/no-explicit-any': 'off', //  any 타입 사용 허용
+    },
+  },
+];
+
+export default eslintConfig;
+```
+
+### 5.2. Prettier 와 ESLint 통합 설정
+
+- ESLint 와 Prettier 충돌 하지 않도록 설정
+
+```bash
+npm install --save-dev eslint-config-prettier
+npm install --save-dev eslint-plugin-prettier
+```
+
+## 6. VSCode 설정 관리
+
+- `/.vscode` 폴더 생성
+- `/.vscode/settings.json` 파일 생성
+
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}
+```
+
+# shadcn/ui 사용
+
+- https://ui.shadcn.com
 
 ## 1. 설치
 
 ```bash
-npm install sass
+npx shadcn@latest init
 ```
 
-## 2. 기본적인 구조
+## 2. 버튼 사용해보기
 
-### 2.1. `/src/styles` 폴더 생성
+- https://ui.shadcn.com/docs/components/button
 
-### 2.2. `/src/styles/valiables.scss` 파일 생성
+### 2.1. 버튼 설치
 
-- SCSS 변수들의 모음
-- 색상, 타이포그래피, 간격, 브레이크 포인트 등
-
-```scss
-// SCSS Variables
-$primary-color: #3b82f6;
-$secondary-color: #64748b;
-$success-color: #10b981;
-$warning-color: #f59e0b;
-$error-color: #ef4444;
-
-// Typography
-$font-family-base:
-  'Inter',
-  -apple-system,
-  BlinkMacSystemFont,
-  'Segoe UI',
-  Roboto,
-  sans-serif;
-$font-size-base: 16px;
-$font-size-sm: 14px;
-$font-size-lg: 18px;
-$font-size-xl: 20px;
-
-// Spacing
-$spacing-xs: 0.25rem;
-$spacing-sm: 0.5rem;
-$spacing-md: 1rem;
-$spacing-lg: 1.5rem;
-$spacing-xl: 2rem;
-$spacing-2xl: 3rem;
-
-// Breakpoints
-$breakpoint-sm: 640px;
-$breakpoint-md: 768px;
-$breakpoint-lg: 1024px;
-$breakpoint-xl: 1280px;
-$breakpoint-2xl: 1536px;
-
-// Border radius
-$border-radius-sm: 0.25rem;
-$border-radius-md: 0.375rem;
-$border-radius-lg: 0.5rem;
-$border-radius-xl: 0.75rem;
-
-// Shadows
-$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-$shadow-md:
-  0 4px 6px -1px rgb(0 0 0 / 0.1),
-  0 2px 4px -2px rgb(0 0 0 / 0.1);
-$shadow-lg:
-  0 10px 15px -3px rgb(0 0 0 / 0.1),
-  0 4px 6px -4px rgb(0 0 0 / 0.1);
+```bash
+npx shadcn@latest add button
 ```
 
-### 2.3. `/src/styles/mixins.scss` 파일 생성
+### 2.2. 활용하기
 
-- 재사용 가능한 믹스인(함수)들
-- `@include 믹스인이름`
-
-```scss
-// SCSS Mixins
-
-// Flexbox mixins
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@mixin flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-@mixin flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-// Responsive mixins
-@mixin mobile {
-  @media (max-width: #{$breakpoint-sm - 1px}) {
-    @content;
-  }
-}
-
-@mixin tablet {
-  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-md - 1px}) {
-    @content;
-  }
-}
-
-@mixin desktop {
-  @media (min-width: #{$breakpoint-md}) {
-    @content;
-  }
-}
-
-@mixin large-desktop {
-  @media (min-width: #{$breakpoint-lg}) {
-    @content;
-  }
-}
-
-// Button mixins
-@mixin button-base {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: $border-radius-md;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
-  border: none;
-  outline: none;
-
-  &:focus {
-    outline: 2px solid $primary-color;
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-@mixin button-primary {
-  @include button-base;
-  background-color: $primary-color;
-  color: white;
-
-  &:hover:not(:disabled) {
-    background-color: darken($primary-color, 10%);
-  }
-}
-
-@mixin button-secondary {
-  @include button-base;
-  background-color: transparent;
-  color: $primary-color;
-  border: 1px solid $primary-color;
-
-  &:hover:not(:disabled) {
-    background-color: $primary-color;
-    color: white;
-  }
-}
-
-// Card mixins
-@mixin card {
-  background-color: white;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-md;
-  padding: $spacing-lg;
-}
-
-// Text mixins
-@mixin text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@mixin text-multiline-truncate($lines: 2) {
-  display: -webkit-box;
-  -webkit-line-clamp: $lines;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-```
-
-### 2.4. `/src/styles/components.scss` 파일 생성
-
-- 컴포넌트 샘플에 적용할 scss
-
-```scss
-// SCSS Components
-@import 'variables';
-@import 'mixins';
-
-// Button Components
-.btn {
-  @include button-base;
-  padding: $spacing-sm $spacing-md;
-  font-size: $font-size-base;
-
-  &--primary {
-    @include button-primary;
-  }
-
-  &--secondary {
-    @include button-secondary;
-  }
-
-  &--large {
-    padding: $spacing-md $spacing-lg;
-    font-size: $font-size-lg;
-  }
-
-  &--small {
-    padding: $spacing-xs $spacing-sm;
-    font-size: $font-size-sm;
-  }
-}
-
-// Card Component
-.card {
-  @include card;
-
-  &__header {
-    margin-bottom: $spacing-md;
-    padding-bottom: $spacing-md;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  &__title {
-    font-size: $font-size-xl;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0;
-  }
-
-  &__content {
-    color: #6b7280;
-    line-height: 1.6;
-  }
-
-  &__footer {
-    margin-top: $spacing-md;
-    padding-top: $spacing-md;
-    border-top: 1px solid #e5e7eb;
-    @include flex-between;
-  }
-}
-
-// Form Components
-.form-group {
-  margin-bottom: $spacing-md;
-
-  &__label {
-    display: block;
-    margin-bottom: $spacing-xs;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  &__input {
-    width: 100%;
-    padding: $spacing-sm $spacing-md;
-    border: 1px solid #d1d5db;
-    border-radius: $border-radius-md;
-    font-size: $font-size-base;
-    transition: border-color 0.2s ease-in-out;
-
-    &:focus {
-      outline: none;
-      border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    &--error {
-      border-color: $error-color;
-    }
-  }
-
-  &__error {
-    margin-top: $spacing-xs;
-    color: $error-color;
-    font-size: $font-size-sm;
-  }
-}
-
-// Navigation Component
-.nav {
-  @include flex-between;
-  padding: $spacing-md 0;
-  border-bottom: 1px solid #e5e7eb;
-
-  &__brand {
-    font-size: $font-size-xl;
-    font-weight: 700;
-    color: $primary-color;
-    text-decoration: none;
-  }
-
-  &__menu {
-    @include flex-center;
-    gap: $spacing-lg;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  &__link {
-    color: #6b7280;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease-in-out;
-
-    &:hover {
-      color: $primary-color;
-    }
-
-    &--active {
-      color: $primary-color;
-    }
-  }
-}
-
-// Responsive adjustments
-@include mobile {
-  .nav {
-    flex-direction: column;
-    gap: $spacing-md;
-
-    &__menu {
-      flex-direction: column;
-      gap: $spacing-sm;
-    }
-  }
-
-  .card {
-    padding: $spacing-md;
-  }
-}
-```
-
-### 2.5. `/src/styles/main.scss` 파일 생성
-
-- 메인 scss 파일
-
-```scss
-// Main SCSS file
-@import 'variables';
-@import 'mixins';
-@import 'components';
-
-// Global styles
-* {
-  box-sizing: border-box;
-}
-
-html {
-  font-size: $font-size-base;
-  line-height: 1.6;
-}
-
-body {
-  font-family: $font-family-base;
-  color: #1f2937;
-  background-color: #f9fafb;
-  margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-// Typography
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0 0 $spacing-md 0;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-h1 {
-  font-size: 2.5rem;
-
-  @include mobile {
-    font-size: 2rem;
-  }
-}
-
-h2 {
-  font-size: 2rem;
-
-  @include mobile {
-    font-size: 1.75rem;
-  }
-}
-
-h3 {
-  font-size: 1.5rem;
-}
-
-h4 {
-  font-size: 1.25rem;
-}
-
-h5 {
-  font-size: 1.125rem;
-}
-
-h6 {
-  font-size: 1rem;
-}
-
-p {
-  margin: 0 0 $spacing-md 0;
-}
-
-a {
-  color: $primary-color;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-// Utility classes
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 $spacing-md;
-
-  @include mobile {
-    padding: 0 $spacing-sm;
-  }
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.mb-0 {
-  margin-bottom: 0;
-}
-.mb-1 {
-  margin-bottom: $spacing-xs;
-}
-.mb-2 {
-  margin-bottom: $spacing-sm;
-}
-.mb-3 {
-  margin-bottom: $spacing-md;
-}
-.mb-4 {
-  margin-bottom: $spacing-lg;
-}
-.mb-5 {
-  margin-bottom: $spacing-xl;
-}
-
-.mt-0 {
-  margin-top: 0;
-}
-.mt-1 {
-  margin-top: $spacing-xs;
-}
-.mt-2 {
-  margin-top: $spacing-sm;
-}
-.mt-3 {
-  margin-top: $spacing-md;
-}
-.mt-4 {
-  margin-top: $spacing-lg;
-}
-.mt-5 {
-  margin-top: $spacing-xl;
-}
-
-.p-0 {
-  padding: 0;
-}
-.p-1 {
-  padding: $spacing-xs;
-}
-.p-2 {
-  padding: $spacing-sm;
-}
-.p-3 {
-  padding: $spacing-md;
-}
-.p-4 {
-  padding: $spacing-lg;
-}
-.p-5 {
-  padding: $spacing-xl;
-}
-
-// Grid system
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0 -#{$spacing-sm};
-}
-
-.col {
-  flex: 1;
-  padding: 0 $spacing-sm;
-
-  &-1 {
-    flex: 0 0 8.333333%;
-  }
-  &-2 {
-    flex: 0 0 16.666667%;
-  }
-  &-3 {
-    flex: 0 0 25%;
-  }
-  &-4 {
-    flex: 0 0 33.333333%;
-  }
-  &-6 {
-    flex: 0 0 50%;
-  }
-  &-8 {
-    flex: 0 0 66.666667%;
-  }
-  &-9 {
-    flex: 0 0 75%;
-  }
-  &-12 {
-    flex: 0 0 100%;
-  }
-}
-
-@include mobile {
-  .col {
-    flex: 0 0 100%;
-    margin-bottom: $spacing-md;
-  }
-}
-```
-
-## 3. `/src/app/global.scss` 파일 생성
-
-- 글로벌 스타일: global.css에서 변환함
-
-```scss
-@import '../styles/main.scss';
-@import 'tailwindcss';
-
-/* 기본 스타일 */
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  overflow-x: hidden;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-```
-
-## 4. SCSS 테스트해보기
-
-- `/src/components/TestComponents.tsx` 파일 생성
+- `/src/components/ButtonTest.tsx` 파일 생성
 
 ```tsx
 import React from 'react';
-import '../styles/main.scss';
+import { Button } from './ui/button';
 
-interface TestComponentProps {
-  title: string;
-  description?: string;
-}
-
-export default function TestComponent({
-  title,
-  description,
-}: TestComponentProps) {
+const ButtonTest = () => {
   return (
-    <div className='container'>
-      <div className='card'>
-        <div className='card__header'>
-          <h2 className='card__title'>{title}</h2>
-        </div>
-        <div className='card__content'>
-          {description && <p>{description}</p>}
-          <p>이 컴포넌트는 SCSS 스타일을 사용합니다!</p>
-        </div>
-        <div className='card__footer'>
-          <button className='btn btn--primary'>Primary Button</button>
-          <button className='btn btn--secondary'>Secondary Button</button>
-        </div>
-      </div>
+    <div>
+      <Button>Click me</Button>
+      <Button variant='outline'>Click me</Button>
+      <Button variant='destructive'>Click me</Button>
+      <Button variant='secondary'>Click me</Button>
+      <Button variant='ghost'>Click me</Button>
+      <Button variant='link'>Click me</Button>
+    </div>
+  );
+};
 
-      <div className='row mt-4'>
-        <div className='col col-6'>
-          <div className='card'>
-            <h3>반응형 그리드</h3>
-            <p>모바일에서는 전체 너비를 차지합니다.</p>
-          </div>
-        </div>
-        <div className='col col-6'>
-          <div className='card'>
-            <h3>SCSS 믹스인</h3>
-            <p>@include를 사용한 스타일 재사용</p>
-          </div>
-        </div>
-      </div>
+export default ButtonTest;
+```
+
+- `/src/app/page.tsx`
+
+```tsx
+import ButtonTest from '@/components/ButtonTest';
+
+export default function Home() {
+  return (
+    <div>
+      <ButtonTest />
     </div>
   );
 }
-```
-
-- `/src/app/layout.tsx` 변경
-
-```tsx
-import './globals.scss'; // 변경
 ```
