@@ -36,3 +36,27 @@ export interface ThemeState {
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
+
+// Todo 타입 정의
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Todo Store 타입 정의
+export interface TodoState {
+  // state 타입
+  todos: Todo[]; // 모든 할일 목록 배열
+  filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
+  // action 타입
+  addTodo: (text: string) => void; // 새로운 할일 추가
+  toggleTodo: (id: string) => void; // 할일 완료 상태 토글
+  deleteTodo: (id: string) => void; // 할일 삭제
+  updateTodo: (id: string, text: string) => void; // 할일 내용 수정
+  setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
+  clearCompleted: () => void; // 완료된 할일 모두 삭제
+  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
+}

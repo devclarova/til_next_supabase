@@ -537,6 +537,7 @@ export default nextConfig;
 ### 4.1. Store의 타입 정의
 
 - `/src/types/types.ts` 업데이트
+- system 테마는 사용자가 PC에서 설정한 테마 적용
 
 ```ts
 // 테마 타입 정의
@@ -555,4 +556,405 @@ export interface ThemeState {
 
 - `/src/stores/ThemeStore.ts` 파일 생성
 
+```ts
+// Theme Store - zustand로 카운터 관리
+
+import { Theme, ThemeState } from '@/types/types';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+// 1단계 - store 타입 정의 (통상 types/types.ts에 정의)
+// interface ThemeState {
+//   theme: Theme; // 현재 선택된 테마
+//   setTheme: (theme: Theme) => void; // 특정 테마로 설정하는 함수
+//   toggleTheme: () => void; // 라이트/다크 테마를 전환하는 함수
+// }
+
+// 2단계 - store 구현(필요 시 localStorage 활용)
+// create :  store 즉, state 만들기
+// get : state 읽기
+// set : state 쓰기
+
+// 2단계 1. localStorage가 적용 안된 버전
+const themeStore = create<ThemeState>()((set, get) => ({
+  // State 값
+  theme: 'system' as Theme,
+  setTheme: (theme: Theme) => {
+    set({ theme });
+    // 실제 테마 적용하도록 함수해서 호출
+    applyTheme(theme);
+  },
+  toggleTheme: () => {
+    const currentTheme = get().theme; // 현재 설정된 테마를 읽어옴
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    set({ theme: newTheme });
+    // 실제 테마 적용하도록 함수호출
+    applyTheme(newTheme);
+  },
+}));
+
+// 2 단계 2. localStorage 가 적용된 버전
+const themeLocalStore = create<ThemeState>()(
+  persist(
+    (set, get) => ({
+      // State 값
+      theme: 'system' as Theme,
+      setTheme: (theme: Theme) => {
+        set({ theme });
+        // 실제 테마 적용하도록 함수해서 호출
+        applyTheme(theme);
+      },
+      toggleTheme: () => {
+        const currentTheme = get().theme; // 현재 설정된 테마를 읽어옴
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        set({ theme: newTheme });
+        // 실제 테마 적용하도록 함수호출
+        applyTheme(newTheme);
+      },
+    }),
+    { name: 'theme-storage' }
+  )
+);
+
+// 실제 테마가 적용되도록 하는 함수
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  if (theme === 'system') {
+    // 시스템 테마 감지
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+      .matches
+      ? 'dark'
+      : 'light';
+    root.setAttribute('data-theme', systemTheme);
+  } else {
+    root.setAttribute('data-theme', theme);
+  }
+
+  if (theme === 'dark') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+}
+
+// 3 단계 - custom Hook 정의
+export const useThemeStore = () => {
+  const { theme, setTheme, toggleTheme } = themeLocalStore();
+  return { theme, setTheme, toggleTheme };
+};
+```
+
 ### 4.3. Store 활용하기
+
+- `/src/components/ThemeToggle.tsx` 파일 생성
+
+```tsx
+'use client';
+
+import { useThemeStore } from '@/stores/ThemeStore';
+
+export default function ThemeToggle() {
+  const { theme, setTheme, toggleTheme } = useThemeStore();
+
+  return (
+    <div className='p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4'>
+      <h2 className='text-2xl font-bold text-center text-gray-800'>
+        Theme Settings
+      </h2>
+
+      <div className='text-center'>
+        <p className='text-gray-600 mb-4'>
+          Current theme:{' '}
+          <span className='font-semibold capitalize'>{theme}</span>
+        </p>
+
+        <div className='space-y-2'>
+          <button
+            onClick={toggleTheme}
+            className='w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
+          >
+            Toggle Theme
+          </button>
+
+          <div className='grid grid-cols-3 gap-2'>
+            <button
+              onClick={() => setTheme('light')}
+              className={`px-3 py-2 rounded text-sm transition-colors ${
+                theme === 'light'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Light
+            </button>
+
+            <button
+              onClick={() => setTheme('dark')}
+              className={`px-3 py-2 rounded text-sm transition-colors ${
+                theme === 'dark'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Dark
+            </button>
+
+            <button
+              onClick={() => setTheme('system')}
+              className={`px-3 py-2 rounded text-sm transition-colors ${
+                theme === 'system'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              System
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+- `/src/app/page.tsx` 출력
+
+```tsx
+import ButtonTest from '@/components/ButtonTest';
+import Counter from '@/components/Counter';
+import SCSSTest from '@/components/SCSSTest';
+import ThemeToggle from '@/components/ThemeToggle';
+import UserProfile from '@/components/UserProfile';
+
+export default function Home() {
+  return (
+    <div>
+      <ButtonTest />
+      <SCSSTest />
+      <Counter />
+      <br />
+      <br />
+      <UserProfile />
+      <br />
+      <br />
+      <ThemeToggle />
+    </div>
+  );
+}
+```
+
+## 5. Todo 테스트 해보기 예제
+
+## 5.1. Store의 타입 정의
+
+- `/src/types/types.ts` 업데이트
+
+```ts
+// Todo 타입 정의
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Todo Store 타입 정의
+export interface TodoState {
+  // state 타입
+  todos: Todo[]; // 모든 할일 목록 배열
+  filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
+  // action 타입
+  addTodo: (text: string) => void; // 새로운 할일 추가
+  toggleTodo: (id: string) => void; // 할일 완료 상태 토글
+  deleteTodo: (id: string) => void; // 할일 삭제
+  updateTodo: (id: string, text: string) => void; // 할일 내용 수정
+  setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
+  clearCompleted: () => void; // 완료된 할일 모두 삭제
+  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
+}
+```
+
+## 5.2. Store 구현하기
+
+- `/src/stores/todoStore.ts` 파일 생성
+
+```ts
+// Todo Store - zustand로 카운터 관리
+
+import { Todo } from '@/types/types';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+// 1단계 - store 타입 정의 (통상 types/types.ts에 정의)
+interface TodoState {
+  // state 타입
+  todos: Todo[]; // 모든 할일 목록 배열
+  filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
+  // action 타입
+  addTodo: (text: string) => void; // 새로운 할일 추가
+  toggleTodo: (id: string) => void; // 할일 완료 상태 토글
+  deleteTodo: (id: string) => void; // 할일 삭제
+  updateTodo: (id: string, text: string) => void; // 할일 내용 수정
+  setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
+  clearCompleted: () => void; // 완료된 할일 모두 삭제
+  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
+}
+
+// 2단계 - store 구현(필요 시 localStorage 활용)
+// create:  store 즉, state 만들기
+// get: state 읽기
+// set: state 쓰기
+
+// 2단계 1. localStorage가 적용 안된 버전
+const todoState = create<TodoState>()((set, get) => ({
+  // state의 초기 상태값
+  todos: [],
+  filter: 'all',
+  addTodo: (text: string) => {
+    const newTodo: Todo = {
+      id: '',
+      text: text,
+      completed: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // 기존 할일 목록에 새로운 할일 추가
+    set(state => ({ todos: [...state.todos, newTodo] }));
+  },
+  toggleTodo: (id: string) => {
+    set(state => ({
+      todos: state.todos.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      ),
+    }));
+  },
+  deleteTodo: (id: string) => {
+    set(state => ({ todos: state.todos.filter(item => item.id !== id) }));
+  },
+  updateTodo: (id: string, text: string) => {
+    set(state => ({
+      todos: state.todos.map(item =>
+        item.id === id ? { ...item, text: text, updatedAt: new Date() } : item
+      ),
+    }));
+  },
+  setFilter: (filter: 'all' | 'active' | 'completed') => {
+    set({ filter });
+  },
+  clearCompleted: () => {
+    set(state => ({ todos: state.todos.filter(item => !item.completed) }));
+  },
+  getFilteredTodos: () => {
+    // 현재 state를 읽어옴
+    const { todos, filter } = get();
+    switch (filter) {
+      case 'active':
+        return todos.filter(item => !item.completed);
+      case 'completed':
+        return todos.filter(item => item.completed);
+      default:
+        return todos;
+    }
+  },
+}));
+
+// 2단계 2. localStorage가 적용된 버전
+const todoLocalState = create<TodoState>()(
+  persist(
+    (set, get) => ({
+      // state 의 초기상태 값
+      todos: [],
+      filter: 'all',
+      // state 를 다루는 액션의 기능 작성
+      addTodo: (text: string) => {
+        const newTodo: Todo = {
+          id: '',
+          text: text,
+          completed: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // 기존 할일 목록에 새로운 할일 추가
+        set(state => ({ todos: [...state.todos, newTodo] }));
+      },
+      toggleTodo: (id: string) => {
+        set(state => ({
+          todos: state.todos.map(item =>
+            item.id === id ? { ...item, completed: !item.completed } : item
+          ),
+        }));
+      },
+      deleteTodo: (id: string) => {
+        set(state => ({ todos: state.todos.filter(item => item.id !== id) }));
+      },
+      updateTodo: (id: string, text: string) => {
+        set(state => ({
+          todos: state.todos.map(item =>
+            item.id === id
+              ? { ...item, text: text, updatedAt: new Date() }
+              : item
+          ),
+        }));
+      },
+      setFilter: (filter: 'all' | 'active' | 'completed') => {
+        set({ filter });
+      },
+      clearCompleted: () => {
+        set(state => ({ todos: state.todos.filter(item => !item.completed) }));
+      },
+      getFilteredTodos: () => {
+        // 현재 state 를 읽어옴
+        const { todos, filter } = get();
+        switch (filter) {
+          case 'active':
+            return todos.filter(item => !item.completed);
+          case 'completed':
+            return todos.filter(item => item.completed);
+          default:
+            return todos;
+        }
+      },
+    }),
+    {
+      name: 'todo-storage', // 로컬스토리지에 저장하는 이름(키명)
+      // 모두 저장할 이유가 없고 내가 선별해서 저장하고 싶다면?
+      // 새로 고침시 filter 는 "all" 이었으면 좋겠다.
+      partialize: state => ({ todos: state.todos }),
+    }
+  )
+);
+
+// 3단계 - custom Hook 정의
+export const useTodoStore = () => {
+  const {
+    todos,
+    filter,
+    addTodo,
+    toggleTodo,
+    updateTodo,
+    setFilter,
+    deleteTodo,
+    clearCompleted,
+    getFilteredTodos,
+  } = todoLocalState();
+
+  return {
+    todos,
+    filter,
+    addTodo,
+    toggleTodo,
+    updateTodo,
+    setFilter,
+    deleteTodo,
+    clearCompleted,
+    getFilteredTodos,
+  };
+};
+```
+
+## 5.3. Store 활용하기
+
+- `/src/components/TodoList.tsx` 파일 생성
