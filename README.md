@@ -1,960 +1,394 @@
-# Zustands
+# React Query
 
-- https://zustand.docs.pmnd.rs/getting-started/introduction
-- zustand(독일어 state)로서 전역 상태 관리
-- Recoil과 흡사하지만 Next.js에서는 React 19로서 Recoil 지원안함
-- useState는 컴포넌트 State, zustand는 전역 State
+- https://tanstack.com/query/latest
+- https://tanstack.com/query/latest/docs/framework/react/overview
 
-## 1. 설치
+## 1. 왜 사용하지?
+
+- 용도는 외부 API 호출 시 처리 역할
+- XHR, fetch, axios, Next의 fetch도 있음
+- 또, React Query까지 알아야 하나?
+- React 프로젝트는 `axios`와 `React Query`가 필수
+- Next 프로젝트는 `axios`와 `React Query`가 선택
+
+## 2. React Query가 필요한 이유를 알아보기
+
+- 사견: Next.js에서는 선택사항(fetch 사용 시)
+
+### 2.1. React에서 axios 또는 fetch를 이용한 호출의 경우
+
+- 동일한 API 호출을 중복해서 여러 번 호출함
+- 캐싱이 없음
+- 동기화 불가능
+- 에러처리가 복잡함
+- 로딩 상태 관리가 복잡함
+
+### 2.2. React에서 React Query를 이용한 호출의 경우
+
+- 자동 캐싱
+- 중복 요청 방지
+- 자동 동기화
+- 간단한 에러처리
+- 자동 로딩 상태 관리
+
+## 3. React Query란?
+
+- 데이터를 쉽게 가져오고 자동으로 데이터를 업데이트 해주는 도구
+- `fresh한 데이터`: 최신 데이터를 말함
+- `stale한 데이터`: 과거 데이터를 말함
+- 서버 상태를 불러오고 캐싱하며 지속적으로 동기화하고 업데이트 하는 라이브러리
+
+## 4. 설치
 
 ```bash
-npm install zustand
+npm install @tanstack/react-query @tanstack/react-query-devtools
 ```
 
-## 2. 카운터 테스트 해보기 예제
+## 5. 환경구성
 
-### 2.1. Store의 타입 정의
+### 5.1. React Query 설정
 
-- `/src/types` 폴더 생성
-- `/src/types/types.ts` 파일 생성
+- `/src/lib/query-client.ts` 파일 생성
 
 ```ts
-// Counter Store 타입 정의
-export interface CounterState {
-  count: number; // 현재 카운터 값(숫자)
-  increment: () => void; // 카운터 1 증가
-  decrement: () => void; // 카운터 1 감소
-  reset: () => void; // 카운터 0 초기화
-  setCount: (count: number) => void; // 직접 카운터 값 설정
-}
+import { QueryClient } from '@tanstack/react-query';
+
+/*
+ * 핵심 내용 설정
+ * - 서버 상태 관리를 위한 모든 기능을 제공함
+ * - 캐싱: API 응답을 메모리에 저장하여 중복 요청 방지
+ * - 동기화: 서버와 클라이언트 상태 동기화
+ * - 백그라운드 업데이트: 데이터 자동 갱신
+ * - 에러 처리: 네트워크 오류 및 서버 오류 처리
+ **/
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    // 데이터 읽기 관련 설정
+    queries: {
+      // 데이터가 오래된 것으로 간주하는 시간(5분)
+      staleTime: 5 * 60 * 1000,
+      // 캐시에서 데이터를 제거하는 시간(10분)
+      gcTime: 10 * 60 * 1000,
+      // 자동으로 데이터를 다시 가져오는 간격(비활성화)
+      refetchInterval: false,
+      // 윈도우 포커스 시 자동 리패치(활성화)
+      refetchOnWindowFocus: true,
+      // 네트워크 재연결 시 자동 리패치(활성화)
+      refetchOnReconnect: true,
+      // 에러 발생 시 재시도 횟수(3회)
+      retry: 3,
+      // 재시도 간격
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    // 데이터 수정 관련 설정
+    mutations: {
+      // 뮤테이션 에러 발생 시 재시도 횟수(1회)
+      retry: 1,
+      // 뮤테이션 재시도 간격
+      retryDelay: 1000,
+    },
+  },
+});
 ```
 
-### 2.2. Store 구현하기
+### 5.2. Provider 설정
 
-- `/src/stores` 폴더 생성
-- `/src/stores/CounterStore.ts` 파일 생성
-
-```ts
-// Counter Store - zustand 로 카운터 관리
-// 1 단계 - store 타입 정의 (통상 types/types.ts 에 정의)
-// interface CounterState {
-//   count: number; // 현재 카운터 값(숫자)
-//   increment: () => void; // 카운터 1증가
-//   decrement: () => void; // 카운터 1감소
-//   reset: () => void; // 카운터 0 초기화
-//   setCount: (count: number) => void; // 직접 카운터 값 설정
-// }
-
-import { CounterState } from '@/types/types';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// 2 단계 - store 구현(필요시 localStorage 활용)
-// create: store 즉, state 만들기
-// get: state 읽기
-// set: state 쓰기
-// const counterState = create((set, get) => ({
-//   // 상태 (state)
-//   count: 0,
-//   // 상태를 바꾸는 함수(action)
-//   increment: () => set(state => ({ count: state.count + 1 })),
-// }));
-
-// 2단계 1. localStorage가 적용 안된 버전
-const counterState = create<CounterState>()((set, get) => ({
-  // 상태값 (state)
-  count: 0,
-  // 상태값 갱신(actions)
-  increment: () => set(state => ({ count: state.count + 1 })),
-  decrement: () => set(state => ({ count: state.count - 1 })),
-  reset: () => set({ count: 0 }),
-  setCount: (count: number) => set({ count: count }),
-}));
-
-// 2단계 2. localStorage가 적용된 버전
-const counterLocalState = create<CounterState>()(
-  persist(
-    (set, get) => ({
-      count: 0,
-      increment: () => set(state => ({ count: state.count + 1 })),
-      decrement: () => set(state => ({ count: state.count - 1 })),
-      reset: () => set({ count: 0 }),
-      setCount: (count: number) => set({ count }),
-    }),
-    { name: 'counter-storage' }
-  )
-);
-
-// 3 단계 - custom Hook 정의
-export const useCounterStore = () => {
-  const { count, increment, decrement, reset, setCount } = counterLocalState();
-  return { count, increment, decrement, reset, setCount };
-};
-```
-
-### 2.3. 활용해보기
-
-- `/src/components/Counter.tsx` 파일 생성
+- `/src/components/providers` 폴더 생성
+- `/src/components/providers/QueryProvider.tsx` 파일 생성
 
 ```tsx
-/**
- * Counter 컴포넌트 - Zustand를 사용한 카운터 기능 구현
- *
- * 이 컴포넌트는 useCounterStore 훅을 사용하여 카운터 상태를 관리합니다.
- * 사용자가 버튼을 클릭하거나 직접 값을 입력하여 카운터를 조작할 수 있습니다.
- */
-
+/*
+ * QueryClient를 App 전체에 제공함
+ * - 모든 하위 컴포넌트에서 useQuery, useMutations 등의 훅을 사용할 수 있게함
+ **/
 'use client';
 
-import { useCounterStore } from '@/stores/CounterStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useState } from 'react';
 
-/**
- * Counter - 카운터 기능을 제공하는 React 컴포넌트
- *
- * Zustand의 useCounterStore 훅을 사용하여:
- * - 현재 카운터 값을 표시
- * - 증가/감소/리셋 버튼 제공
- * - 직접 값 입력 기능 제공
- *
- * @returns JSX.Element - 카운터 UI 컴포넌트
- */
-export default function Counter() {
-  // Zustand 스토어에서 상태와 액션들을 가져옵니다
-  const { count, increment, decrement, reset, setCount } = useCounterStore();
+export default function QueryProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // React 라면 아래 설정은 달라집니다.
+  // 현재 Next.js 에다가 셋팅을 진행함.
+  // 서버 사이드 렌더링을 위한 QueryClient 인스턴스 생성
+  // 각 요청마다 새로운 QueryClient를 생성하여 상태 구분함
+  const [client, setClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // 서버 사이드에서는 즉시 staleTime을 0으로 처리
+            staleTime: 0,
+            // 서버 사이드에서는 캐시하지 않음
+            gcTime: 0,
+          },
+        },
+      })
+  );
 
   return (
-    <div className='p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4'>
-      {/* 컴포넌트 제목 */}
-      <h2 className='text-2xl font-bold text-center text-gray-800'>
-        Counter with Zustand
-      </h2>
-
-      <div className='text-center'>
-        {/* 현재 카운터 값을 큰 글씨로 표시 */}
-        <div className='text-4xl font-bold text-blue-600 mb-4'>{count}</div>
-
-        {/* 카운터 조작 버튼들 */}
-        <div className='space-x-2'>
-          {/* 감소 버튼 - 클릭 시 decrement 액션 호출 */}
-          <button
-            onClick={decrement}
-            className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors'
-          >
-            -1
-          </button>
-
-          {/* 증가 버튼 - 클릭 시 increment 액션 호출 */}
-          <button
-            onClick={increment}
-            className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors'
-          >
-            +1
-          </button>
-
-          {/* 리셋 버튼 - 클릭 시 reset 액션 호출 */}
-          <button
-            onClick={reset}
-            className='px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
-          >
-            Reset
-          </button>
-        </div>
-
-        {/* 직접 값 입력 필드 */}
-        <div className='mt-4'>
-          <input
-            type='number'
-            value={count}
-            onChange={e => setCount(Number(e.target.value))} // 입력값을 숫자로 변환하여 setCount 액션 호출
-            className='w-20 px-2 py-1 border border-gray-300 rounded text-center'
-          />
-        </div>
-      </div>
-    </div>
+    <QueryClientProvider client={client}>
+      {children}
+      {/* npm run dev 상태에서만 개발자 도구 보기 */}
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools
+          initialIsOpen={false}
+          buttonPosition='bottom-right'
+        />
+      )}
+    </QueryClientProvider>
   );
 }
 ```
 
-- `/src/app/page.tsx` 출력하기
+### 5.3. 앱 전체에 Provider 적용
+
+- `/src/app/layout.tsx` 적용
 
 ```tsx
-import ButtonTest from '@/components/ButtonTest';
-import Counter from '@/components/Counter';
-import SCSSTest from '@/components/SCSSTest';
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.scss';
+import QueryProvider from '@/components/providers/QueryProvider';
 
-export default function Home() {
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
+
+export const metadata: Metadata = {
+  title: 'Create Next App',
+  description: 'Generated by create next app',
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <div>
-      <ButtonTest />
-      <SCSSTest />
-      <Counter />
-    </div>
+    <html lang='en'>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <QueryProvider>{children}</QueryProvider>
+      </body>
+    </html>
   );
 }
 ```
 
-## 3. 사용자 프로필 테스트 해보기 예제
+## 6. API 설정하기
 
-### 3.1. Store의 타입 정의
+### 6.1. API 함수 만들기(CRUD)
 
-- `/src/types/types.ts`에 Store 타입 추가
+- 아래는 Next.js에서 제공하는 API와 혼돈하지 마세요
+- `/src/lib/api.ts` 파일 생성
 
 ```ts
-// user 타입 정의
+/**
+ * API 함수들 - 서버와의 통신을 위한 함수들
+ * 실제 API 호출을 담당하는 함수 정의
+ * 실제 프로젝트에서는 axios, fetch 등을 사용해서 구현함.
+ */
+
+// 타입 정의
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  avatar?: string;
-}
-
-// user Store 타입
-export interface UserState {
-  user: User | null; // 현재 로그인한 사용자 정보 (null이면 로그아웃된 상태)
-  isLoggedIn: boolean; // 로그인 여부를 나타내는 Boolean 값
-  isLoading: boolean; // 로그인/로그아웃 처리 중인지 나타내는 Boolean 값
-  login: (user: User) => void; // 사용자 로그인 처리 함수
-  logout: () => void; // 사용자 로그아웃 처리 함수
-  updateUser: (user: User) => void; // User의 모든 속성을 선택적 옵션으로 정의
-  setLoading: (loading: boolean) => void; // 로딩 상태 설정 함수
-}
-```
-
-### 3.2. Store 구현하기
-
-- `/src/stores/UserStore.ts` 파일 생성
-
-```ts
-// User Store - zustand 로 카운터 관리
-
-import { User, UserState } from '@/types/types';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// 1 단계 - store 타입 정의 (통상 types/types.ts 에 정의)
-// import { User } from "@/types/types";
-// interface UserState {
-//   user: User | null; // 현재 로그인한 사용자 정보(null 이면 로그아웃된 상태)
-//   isLoggedIn: boolean; // 로그인 여부를 나타내는 Boolean 값
-//   isLoading: boolean; // 로그인/로그아웃 처리중인지 나타내는 Boolean 값
-//   login: (user: User) => void; // 사용자 로그인 처리 함수
-//   logout: () => void; // 사용자 로그아웃 처리 함수
-//   updateUser: (user: Partial<User>) => void; // User 의 모든 속성을 선택적 옵션으로 정의
-//   setLoading: (loading: boolean) => void; // 로딩 상태 설정 함수
-// }
-
-// 2 단계 - store 구현(필요시 localStorage 활용)
-// create :  store 즉, state 만들기
-// get : state 읽기
-// set : state 쓰기
-
-// 2 단계 1. localStorage가 적용 안된 버전
-const userStore = create<UserState>()((set, get) => ({
-  // 초기 상태
-  user: null,
-  isLoggedIn: false,
-  isLoading: false,
-  // 사용자 정보 업데이트
-  login: (user: User) =>
-    set({ user: user, isLoggedIn: true, isLoading: false }),
-  logout: () => set({ user: null, isLoggedIn: false, isLoading: false }),
-
-  updateUser: (userData: Partial<User>) =>
-    set(state => ({
-      user: state.user ? { ...state.user, ...userData } : null,
-    })),
-  // 로딩 상태 설정
-  setLoading: (loading: boolean) => set({ isLoading: loading }),
-}));
-
-// 2 단계 2. localStorage가 적용된 버전
-const userLocalStore = create<UserState>()(
-  persist(
-    (set, get) => ({
-      // 초기 상태
-      user: null,
-      isLoggedIn: false,
-      isLoading: false,
-      // 사용자 정보 업데이트
-      login: (user: User) =>
-        set({ user: user, isLoggedIn: true, isLoading: false }),
-      logout: () => set({ user: null, isLoggedIn: false, isLoading: false }),
-
-      updateUser: (userData: Partial<User>) =>
-        set(state => ({
-          user: state.user ? { ...state.user, ...userData } : null,
-        })),
-      // 로딩 상태 설정
-      setLoading: (loading: boolean) => set({ isLoading: loading }),
-    }),
-    { name: 'user-storage' }
-  )
-);
-
-// 3 단계 - custom Hook 정의
-export const useUserState = () => {
-  const { user, isLoggedIn, isLoading, login, logout, updateUser, setLoading } =
-    userLocalStore();
-  return { user, isLoggedIn, isLoading, login, logout, updateUser, setLoading };
-};
-```
-
-### 3.3. Store 활용하기
-
-- `/src/components/UserProfile.tsx` 파일 생성
-
-```tsx
-/**
- * UserProfile 컴포넌트 - Zustand를 사용한 사용자 인증 기능 구현
- *
- * 이 컴포넌트는 useUserStore 훅을 사용하여 사용자 로그인/로그아웃과
- * 프로필 정보 수정 기능을 제공합니다.
- */
-
-'use client';
-
-import { useState } from 'react';
-import Image from 'next/image';
-import { useUserState } from '@/stores/UserStore';
-
-/**
- * UserProfile - 사용자 인증 및 프로필 관리 컴포넌트
- *
- * Zustand의 useUserStore 훅을 사용하여:
- * - 로그인/로그아웃 기능
- * - 사용자 정보 표시 및 수정
- * - 로딩 상태 관리
- *
- * @returns JSX.Element - 사용자 프로필 UI 컴포넌트
- */
-export default function UserProfile() {
-  // Zustand 스토어에서 사용자 관련 상태와 액션들을 가져옵니다
-  const { user, isLoggedIn, isLoading, login, logout, updateUser, setLoading } =
-    useUserState();
-
-  // 로컬 상태: 편집 모드와 편집 중인 이름
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState('');
-
-  /**
-   * handleLogin - 로그인 처리 함수
-   *
-   * 로딩 상태를 true로 설정하고 1초 후 시뮬레이션된 사용자 정보로 로그인합니다.
-   * 실제 프로젝트에서는 API 호출로 대체되어야 합니다.
-   */
-  const handleLogin = () => {
-    setLoading(true);
-    // 시뮬레이션된 로그인 (실제로는 API 호출)
-    setTimeout(() => {
-      login({
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        avatar: 'https://via.placeholder.com/150',
-      });
-    }, 1000);
+  phone: string;
+  website: string;
+  company: {
+    name: string;
+    catchPhrase: string;
+    bs: string;
   };
-
-  /**
-   * handleLogout - 로그아웃 처리 함수
-   *
-   * Zustand 스토어의 logout 액션을 호출하여 사용자 정보를 초기화합니다.
-   */
-  const handleLogout = () => {
-    logout();
-  };
-
-  /**
-   * handleUpdateName - 사용자 이름 업데이트 함수
-   *
-   * 편집된 이름이 유효한 경우에만 사용자 정보를 업데이트하고
-   * 편집 모드를 종료합니다.
-   */
-  const handleUpdateName = () => {
-    if (editName.trim()) {
-      updateUser({ name: editName });
-      setIsEditing(false);
-      setEditName('');
-    }
-  };
-
-  // 로딩 상태일 때 로딩 스피너 표시
-  if (isLoading) {
-    return (
-      <div className='p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-2 text-gray-600'>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className='p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4'>
-      <h2 className='text-2xl font-bold text-center text-gray-800'>
-        User Profile
-      </h2>
-
-      {!isLoggedIn ? (
-        // 로그아웃 상태: 로그인 버튼 표시
-        <div className='text-center'>
-          <p className='text-gray-600 mb-4'>
-            Please log in to view your profile
-          </p>
-          <button
-            onClick={handleLogin}
-            className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
-          >
-            Login
-          </button>
-        </div>
-      ) : (
-        // 로그인 상태: 사용자 정보 표시
-        <div className='space-y-4'>
-          {/* 사용자 아바타 이미지 */}
-          {user?.avatar && (
-            <div className='text-center'>
-              <Image
-                src={user.avatar}
-                alt='Avatar'
-                width={80}
-                height={80}
-                className='w-20 h-20 rounded-full mx-auto'
-              />
-            </div>
-          )}
-
-          <div className='text-center'>
-            {isEditing ? (
-              // 편집 모드: 이름 수정 폼
-              <div className='space-y-2'>
-                <input
-                  type='text'
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  className='w-full px-3 py-2 border border-gray-300 rounded'
-                  placeholder='Enter new name'
-                />
-                <div className='space-x-2'>
-                  <button
-                    onClick={handleUpdateName}
-                    className='px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600'
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditName('');
-                    }}
-                    className='px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600'
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // 표시 모드: 사용자 정보 표시
-              <div>
-                <h3 className='text-xl font-semibold'>{user?.name}</h3>
-                <p className='text-gray-600'>{user?.email}</p>
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setEditName(user?.name || '');
-                  }}
-                  className='mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600'
-                >
-                  Edit Name
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 로그아웃 버튼 */}
-          <div className='text-center'>
-            <button
-              onClick={handleLogout}
-              className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors'
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-- `/src/app/page.tsx` 업데이트
-
-```tsx
-import ButtonTest from '@/components/ButtonTest';
-import Counter from '@/components/Counter';
-import SCSSTest from '@/components/SCSSTest';
-import UserProfile from '@/components/UserProfile';
-
-export default function Home() {
-  return (
-    <div>
-      <ButtonTest />
-      <SCSSTest />
-      <Counter />
-      <br />
-      <br />
-      <UserProfile />
-    </div>
-  );
-}
-```
-
-- `Next.config.ts`: 외부 이미지 URL 참조 시 옵션 정리
-
-```ts
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  sassOptions: {
-    includePaths: ['./src/styles'],
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-    ],
-  },
-};
-
-export default nextConfig;
-```
-
-## 4. 테마 테스트 해보기 예제
-
-### 4.1. Store의 타입 정의
-
-- `/src/types/types.ts` 업데이트
-- system 테마는 사용자가 PC에서 설정한 테마 적용
-
-```ts
-// 테마 타입 정의
-// system 테마: 시스템 설정을 따르는 테마
-export type Theme = 'light' | 'dark' | 'system';
-
-// 테마 Store 타입 정의
-export interface ThemeState {
-  theme: Theme; // 현재 선택된 테마
-  setTheme: (theme: Theme) => void; // 특정 테마로 설정하는 함수
-  toggleTheme: () => void; // 라이트/다크 테마를 전환하는 함수
-}
-```
-
-### 4.2. Store 구현하기
-
-- `/src/stores/ThemeStore.ts` 파일 생성
-
-```ts
-// Theme Store - zustand로 카운터 관리
-
-import { Theme, ThemeState } from '@/types/types';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// 1단계 - store 타입 정의 (통상 types/types.ts에 정의)
-// interface ThemeState {
-//   theme: Theme; // 현재 선택된 테마
-//   setTheme: (theme: Theme) => void; // 특정 테마로 설정하는 함수
-//   toggleTheme: () => void; // 라이트/다크 테마를 전환하는 함수
-// }
-
-// 2단계 - store 구현(필요 시 localStorage 활용)
-// create :  store 즉, state 만들기
-// get : state 읽기
-// set : state 쓰기
-
-// 2단계 1. localStorage가 적용 안된 버전
-const themeStore = create<ThemeState>()((set, get) => ({
-  // State 값
-  theme: 'system' as Theme,
-  setTheme: (theme: Theme) => {
-    set({ theme });
-    // 실제 테마 적용하도록 함수해서 호출
-    applyTheme(theme);
-  },
-  toggleTheme: () => {
-    const currentTheme = get().theme; // 현재 설정된 테마를 읽어옴
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    set({ theme: newTheme });
-    // 실제 테마 적용하도록 함수호출
-    applyTheme(newTheme);
-  },
-}));
-
-// 2 단계 2. localStorage 가 적용된 버전
-const themeLocalStore = create<ThemeState>()(
-  persist(
-    (set, get) => ({
-      // State 값
-      theme: 'system' as Theme,
-      setTheme: (theme: Theme) => {
-        set({ theme });
-        // 실제 테마 적용하도록 함수해서 호출
-        applyTheme(theme);
-      },
-      toggleTheme: () => {
-        const currentTheme = get().theme; // 현재 설정된 테마를 읽어옴
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        set({ theme: newTheme });
-        // 실제 테마 적용하도록 함수호출
-        applyTheme(newTheme);
-      },
-    }),
-    { name: 'theme-storage' }
-  )
-);
-
-// 실제 테마가 적용되도록 하는 함수
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  if (theme === 'system') {
-    // 시스템 테마 감지
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-      .matches
-      ? 'dark'
-      : 'light';
-    root.setAttribute('data-theme', systemTheme);
-  } else {
-    root.setAttribute('data-theme', theme);
-  }
-
-  if (theme === 'dark') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
 }
 
-// 3 단계 - custom Hook 정의
-export const useThemeStore = () => {
-  const { theme, setTheme, toggleTheme } = themeLocalStore();
-  return { theme, setTheme, toggleTheme };
-};
-```
-
-### 4.3. Store 활용하기
-
-- `/src/components/ThemeToggle.tsx` 파일 생성
-
-```tsx
-'use client';
-
-import { useThemeStore } from '@/stores/ThemeStore';
-
-export default function ThemeToggle() {
-  const { theme, setTheme, toggleTheme } = useThemeStore();
-
-  return (
-    <div className='p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4'>
-      <h2 className='text-2xl font-bold text-center text-gray-800'>
-        Theme Settings
-      </h2>
-
-      <div className='text-center'>
-        <p className='text-gray-600 mb-4'>
-          Current theme:{' '}
-          <span className='font-semibold capitalize'>{theme}</span>
-        </p>
-
-        <div className='space-y-2'>
-          <button
-            onClick={toggleTheme}
-            className='w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
-          >
-            Toggle Theme
-          </button>
-
-          <div className='grid grid-cols-3 gap-2'>
-            <button
-              onClick={() => setTheme('light')}
-              className={`px-3 py-2 rounded text-sm transition-colors ${
-                theme === 'light'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Light
-            </button>
-
-            <button
-              onClick={() => setTheme('dark')}
-              className={`px-3 py-2 rounded text-sm transition-colors ${
-                theme === 'dark'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Dark
-            </button>
-
-            <button
-              onClick={() => setTheme('system')}
-              className={`px-3 py-2 rounded text-sm transition-colors ${
-                theme === 'system'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              System
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export interface Post {
+  id: number;
+  userId: number;
+  title: string;
+  body: string;
 }
-```
 
-- `/src/app/page.tsx` 출력
-
-```tsx
-import ButtonTest from '@/components/ButtonTest';
-import Counter from '@/components/Counter';
-import SCSSTest from '@/components/SCSSTest';
-import ThemeToggle from '@/components/ThemeToggle';
-import UserProfile from '@/components/UserProfile';
-
-export default function Home() {
-  return (
-    <div>
-      <ButtonTest />
-      <SCSSTest />
-      <Counter />
-      <br />
-      <br />
-      <UserProfile />
-      <br />
-      <br />
-      <ThemeToggle />
-    </div>
-  );
+export interface Comment {
+  id: number;
+  postId: number;
+  name: string;
+  email: string;
+  body: string;
 }
-```
 
-## 5. Todo 테스트 해보기 예제
-
-## 5.1. Store의 타입 정의
-
-- `/src/types/types.ts` 업데이트
-
-```ts
-// Todo 타입 정의
 export interface Todo {
-  id: string;
-  text: string;
+  id: number;
+  userId: number;
+  title: string;
   completed: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-// Todo Store 타입 정의
-export interface TodoState {
-  // state 타입
-  todos: Todo[]; // 모든 할일 목록 배열
-  filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
-  // action 타입
-  addTodo: (text: string) => void; // 새로운 할일 추가
-  toggleTodo: (id: string) => void; // 할일 완료 상태 토글
-  deleteTodo: (id: string) => void; // 할일 삭제
-  updateTodo: (id: string, text: string) => void; // 할일 내용 수정
-  setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
-  clearCompleted: () => void; // 완료된 할일 모두 삭제
-  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
-}
-```
+// 사용자 목록가져오기 API
+export async function fetchUsers(): Promise<User[]> {
+  // Vanila js 활용(Next.js 의 fetch 아님)
+  const response = await fetch('https://jsonplaceholder.typicode.com/users');
 
-## 5.2. Store 구현하기
+  if (!response.ok) {
+    throw new Error('사용자 목록 가져오기 실패');
+  }
 
-- `/src/stores/todoStore.ts` 파일 생성
-
-```ts
-// Todo Store - zustand로 카운터 관리
-
-import { Todo } from '@/types/types';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-// 1단계 - store 타입 정의 (통상 types/types.ts에 정의)
-interface TodoState {
-  // state 타입
-  todos: Todo[]; // 모든 할일 목록 배열
-  filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
-  // action 타입
-  addTodo: (text: string) => void; // 새로운 할일 추가
-  toggleTodo: (id: string) => void; // 할일 완료 상태 토글
-  deleteTodo: (id: string) => void; // 할일 삭제
-  updateTodo: (id: string, text: string) => void; // 할일 내용 수정
-  setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
-  clearCompleted: () => void; // 완료된 할일 모두 삭제
-  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
+  return response.json();
 }
 
-// 2단계 - store 구현(필요 시 localStorage 활용)
-// create:  store 즉, state 만들기
-// get: state 읽기
-// set: state 쓰기
+// 특정 사용자 정보 가져오기
+export async function fetchUser(id: number): Promise<User> {
+  // Vanila js 활용(Next.js 의 fetch 아님)
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/users/${id}`
+  );
 
-// 2단계 1. localStorage가 적용 안된 버전
-const todoState = create<TodoState>()((set, get) => ({
-  // state의 초기 상태값
-  todos: [],
-  filter: 'all',
-  addTodo: (text: string) => {
-    const newTodo: Todo = {
-      id: '',
-      text: text,
-      completed: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  if (!response.ok) {
+    throw new Error(`${id} 사용자 목록 가져오기 실패`);
+  }
 
-    // 기존 할일 목록에 새로운 할일 추가
-    set(state => ({ todos: [...state.todos, newTodo] }));
-  },
-  toggleTodo: (id: string) => {
-    set(state => ({
-      todos: state.todos.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      ),
-    }));
-  },
-  deleteTodo: (id: string) => {
-    set(state => ({ todos: state.todos.filter(item => item.id !== id) }));
-  },
-  updateTodo: (id: string, text: string) => {
-    set(state => ({
-      todos: state.todos.map(item =>
-        item.id === id ? { ...item, text: text, updatedAt: new Date() } : item
-      ),
-    }));
-  },
-  setFilter: (filter: 'all' | 'active' | 'completed') => {
-    set({ filter });
-  },
-  clearCompleted: () => {
-    set(state => ({ todos: state.todos.filter(item => !item.completed) }));
-  },
-  getFilteredTodos: () => {
-    // 현재 state를 읽어옴
-    const { todos, filter } = get();
-    switch (filter) {
-      case 'active':
-        return todos.filter(item => !item.completed);
-      case 'completed':
-        return todos.filter(item => item.completed);
-      default:
-        return todos;
-    }
-  },
-}));
+  return response.json();
+}
 
-// 2단계 2. localStorage가 적용된 버전
-const todoLocalState = create<TodoState>()(
-  persist(
-    (set, get) => ({
-      // state 의 초기상태 값
-      todos: [],
-      filter: 'all',
-      // state 를 다루는 액션의 기능 작성
-      addTodo: (text: string) => {
-        const newTodo: Todo = {
-          id: '',
-          text: text,
-          completed: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+// 게시글 목록 가져오기
+// 전체 가져오기 기능
+// 또는 각 사용자별 가져오기 기능
+export async function fetchPosts(userId?: number): Promise<Post[]> {
+  const url = userId
+    ? `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
+    : 'https://jsonplaceholder.typicode.com/posts';
 
-        // 기존 할일 목록에 새로운 할일 추가
-        set(state => ({ todos: [...state.todos, newTodo] }));
-      },
-      toggleTodo: (id: string) => {
-        set(state => ({
-          todos: state.todos.map(item =>
-            item.id === id ? { ...item, completed: !item.completed } : item
-          ),
-        }));
-      },
-      deleteTodo: (id: string) => {
-        set(state => ({ todos: state.todos.filter(item => item.id !== id) }));
-      },
-      updateTodo: (id: string, text: string) => {
-        set(state => ({
-          todos: state.todos.map(item =>
-            item.id === id
-              ? { ...item, text: text, updatedAt: new Date() }
-              : item
-          ),
-        }));
-      },
-      setFilter: (filter: 'all' | 'active' | 'completed') => {
-        set({ filter });
-      },
-      clearCompleted: () => {
-        set(state => ({ todos: state.todos.filter(item => !item.completed) }));
-      },
-      getFilteredTodos: () => {
-        // 현재 state 를 읽어옴
-        const { todos, filter } = get();
-        switch (filter) {
-          case 'active':
-            return todos.filter(item => !item.completed);
-          case 'completed':
-            return todos.filter(item => item.completed);
-          default:
-            return todos;
-        }
-      },
-    }),
+  // Vanila js 활용(Next.js 의 fetch 아님)
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`게시글 목록 가져오기 실패`);
+  }
+
+  return response.json();
+}
+
+// 특정 게시글 상세 정보를 가져오기
+export async function fetchPost(id: number): Promise<Post> {
+  // Vanila js 활용(Next.js 의 fetch 아님)
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/posts/${id}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`게시글 목록 가져오기 실패`);
+  }
+
+  return response.json();
+}
+
+// 특정 게시글의 댓글 가져오기
+export async function fetchComment(postId: number): Promise<Comment[]> {
+  // Vanila js 활용(Next.js 의 fetch 아님)
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/posts/${postId}/comments`
+  );
+
+  if (!response.ok) {
+    throw new Error(`${postId} 게시글 댓글 가져오기 실패`);
+  }
+
+  return response.json();
+}
+
+// 할일 목록 가져오기
+export async function fetchTodos(userId?: number): Promise<Todo[]> {
+  const url = userId
+    ? `https://jsonplaceholder.typicode.com/todos?userId=${userId}`
+    : 'https://jsonplaceholder.typicode.com/todos';
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch todos');
+  }
+
+  return response.json();
+}
+
+// 새 게시글 생성하는 함수
+export async function createPost(post: Omit<Post, 'id'>): Promise<Post> {
+  const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(post),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create post');
+  }
+
+  return response.json();
+}
+
+// 게시글 수정하는 함수
+export async function updatePost(
+  id: number,
+  post: Partial<Post>
+): Promise<Post> {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/posts/${id}`,
     {
-      name: 'todo-storage', // 로컬스토리지에 저장하는 이름(키명)
-      // 모두 저장할 이유가 없고 내가 선별해서 저장하고 싶다면?
-      // 새로 고침시 filter 는 "all" 이었으면 좋겠다.
-      partialize: state => ({ todos: state.todos }),
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(post),
     }
-  )
-);
+  );
 
-// 3단계 - custom Hook 정의
-export const useTodoStore = () => {
-  const {
-    todos,
-    filter,
-    addTodo,
-    toggleTodo,
-    updateTodo,
-    setFilter,
-    deleteTodo,
-    clearCompleted,
-    getFilteredTodos,
-  } = todoLocalState();
+  if (!response.ok) {
+    throw new Error(`Failed to update post ${id}`);
+  }
 
-  return {
-    todos,
-    filter,
-    addTodo,
-    toggleTodo,
-    updateTodo,
-    setFilter,
-    deleteTodo,
-    clearCompleted,
-    getFilteredTodos,
-  };
-};
+  return response.json();
+}
+
+// 게시글 삭제하는 함수
+export async function deletePost(id: number): Promise<void> {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/posts/${id}`,
+    {
+      method: 'DELETE',
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete post ${id}`);
+  }
+}
 ```
 
-## 5.3. Store 활용하기
+### 6.2. 사용자 관련 훅
 
-- `/src/components/TodoList.tsx` 파일 생성
+- `/src/hooks` 폴더 생성
+- `/src/hooks/useUsers.ts` 파일 생성
+
+### 6.3. 게시글 관련 훅
+
+- `/src/hooks/usePosts.ts` 파일 생성
+
+### 6.4. 할일 관련 훅
+
+- `/src/hooks/useTodos.ts` 파일 생성
