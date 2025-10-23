@@ -3,27 +3,27 @@
 - https://tanstack.com/query/latest
 - https://tanstack.com/query/latest/docs/framework/react/overview
 
-## 1. 왜 사용하지?
+## 1. 외부 API 연동라이브러리
 
-- 용도는 외부 API 호출 시 처리 역할
-- XHR, fetch, axios, Next의 fetch도 있음
-- 또, React Query까지 알아야 하나?
-- React 프로젝트는 `axios`와 `React Query`가 필수
-- Next 프로젝트는 `axios`와 `React Query`가 선택
+- 용도는 외부 API 호출시 처리
+- XHR, fetch, axios, Next 의 fetch 도 있음
+- 또, React Query 까지 알아야 하나?
+- React 프로젝트는 `axios` 와 `React Query` 가 필수
+- Next 프로젝트는 `axios` 와 `React Query` 가 선택
 
-## 2. React Query가 필요한 이유를 알아보기
+## 2. React Query 가 필요로 한 이유 알아보기
 
-- 사견: Next.js에서는 선택사항(fetch 사용 시)
+- 사견 : Next.js 에서는 선택사항(fetch 사용시)
 
-### 2.1. React에서 axios 또는 fetch를 이용한 호출의 경우
+### 2.1. React 에서 axios 또는 fetch 를 이용한 호출의 경우
 
-- 동일한 API 호출을 중복해서 여러 번 호출함
+- 동일한 API 호출을 중복해서 여러번 호출함
 - 캐싱이 없음
 - 동기화 불가능
 - 에러처리가 복잡함
 - 로딩 상태 관리가 복잡함
 
-### 2.2. React에서 React Query를 이용한 호출의 경우
+### 2.2. React 에서 React Query 를 이용한 호출의 경우
 
 - 자동 캐싱
 - 중복 요청 방지
@@ -31,14 +31,17 @@
 - 간단한 에러처리
 - 자동 로딩 상태 관리
 
-## 3. React Query란?
+## 3. React Query 란?
 
-- 데이터를 쉽게 가져오고 자동으로 데이터를 업데이트 해주는 도구
-- `fresh한 데이터`: 최신 데이터를 말함
-- `stale한 데이터`: 과거 데이터를 말함
-- 서버 상태를 불러오고 캐싱하며 지속적으로 동기화하고 업데이트 하는 라이브러리
+- 데이터를 쉽게 가져오고, 자동으로 데이터를 업데이트 해주는 도구
+- `fresh 한 데이터` : 최신 데이터를 말함
+- `stale 한 데이터` : 과거 데이터를 말함
+- 서버 상태를 불러오고, 캐싱하며, 지속적으로 동기화하고, 업데이트하는 라이브러리
 
 ## 4. 설치
+
+- 주의사항 : React Query 버전에 따라서 문법이 다름
+- https://tanstack.com/query/latest/docs/framework/react/overview
 
 ```bash
 npm install @tanstack/react-query @tanstack/react-query-devtools
@@ -54,58 +57,58 @@ npm install @tanstack/react-query @tanstack/react-query-devtools
 import { QueryClient } from '@tanstack/react-query';
 
 /*
- * 핵심 내용 설정
- * - 서버 상태 관리를 위한 모든 기능을 제공함
- * - 캐싱: API 응답을 메모리에 저장하여 중복 요청 방지
- * - 동기화: 서버와 클라이언트 상태 동기화
- * - 백그라운드 업데이트: 데이터 자동 갱신
- * - 에러 처리: 네트워크 오류 및 서버 오류 처리
+ 핵심 내용 설정
+ * 서버 상태 관리를 위한 모든 기능을 제공함
+ * - 캐싱 : API 응답을 메모리에 저장하여 중복 요청 방지
+ * - 동기화 : 서버와 클라이언트 상태 동기화
+ * - 백그라운드 업데이트 : 데이터 자동 갱신
+ * - 에러 처리 : 네트워크 오류 및 서버 오류 처리
  **/
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     // 데이터 읽기 관련 설정
     queries: {
-      // 데이터가 오래된 것으로 간주하는 시간(5분)
+      // 데이터가 오래된 것으로 간주하는 시간 (5분)
       staleTime: 5 * 60 * 1000,
-      // 캐시에서 데이터를 제거하는 시간(10분)
+      // 캐시에서 데이터를 제거하는 시간 (10분)
       gcTime: 10 * 60 * 1000,
-      // 자동으로 데이터를 다시 가져오는 간격(비활성화)
+      // 자동으로 데이터를 다시 가져오는 간격 (비활성화)
       refetchInterval: false,
-      // 윈도우 포커스 시 자동 리패치(활성화)
+      // 윈도우 포커스 시 자동 리페치 (활성화)
       refetchOnWindowFocus: true,
-      // 네트워크 재연결 시 자동 리패치(활성화)
+      // 네트워크 재연결시 자동 리페치 (활성화)
       refetchOnReconnect: true,
-      // 에러 발생 시 재시도 횟수(3회)
+      // 에러 발생시 재시도 횟수 (3회)
       retry: 3,
       // 재시도 간격
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     // 데이터 수정 관련 설정
     mutations: {
-      // 뮤테이션 에러 발생 시 재시도 횟수(1회)
+      // 뮤테이션 에러 발생시 재시도 횟수 (1회)
       retry: 1,
-      // 뮤테이션 재시도 간격
+      // 큐테이션 재시도 간격
       retryDelay: 1000,
     },
   },
 });
 ```
 
-### 5.2. Provider 설정
+## 5.2. Provider 설정
 
 - `/src/components/providers` 폴더 생성
 - `/src/components/providers/QueryProvider.tsx` 파일 생성
 
 ```tsx
 /*
- * QueryClient를 App 전체에 제공함
- * - 모든 하위 컴포넌트에서 useQuery, useMutations 등의 훅을 사용할 수 있게함
+QueryClient 를 App 전체에 제공함
+- 모든 하위 컴포넌트에서 useQuery, useMutaion 등의 훅을 사용할 수있게함
  **/
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import { useState } from 'react';
 
 export default function QueryProvider({
@@ -116,7 +119,7 @@ export default function QueryProvider({
   // React 라면 아래 설정은 달라집니다.
   // 현재 Next.js 에다가 셋팅을 진행함.
   // 서버 사이드 렌더링을 위한 QueryClient 인스턴스 생성
-  // 각 요청마다 새로운 QueryClient를 생성하여 상태 구분함
+  // 각 요청마다 새로운 QueryClient 를 생성하여 상태 구분함.
   const [client, setClient] = useState(
     () =>
       new QueryClient({
@@ -190,9 +193,9 @@ export default function RootLayout({
 
 ## 6. API 설정하기
 
-### 6.1. API 함수 만들기(CRUD)
+### 6.1. API 함수 만들기 (CRUD)
 
-- 아래는 Next.js에서 제공하는 API와 혼돈하지 마세요
+- 아래는 next.js에서 제공하는 api 와 혼돈 X
 - `/src/lib/api.ts` 파일 생성
 
 ```ts
@@ -290,14 +293,14 @@ export async function fetchPost(id: number): Promise<Post> {
   );
 
   if (!response.ok) {
-    throw new Error(`게시글 목록 가져오기 실패`);
+    throw new Error(`${id} 게시글 상세정보 가져오기 실패`);
   }
 
   return response.json();
 }
 
 // 특정 게시글의 댓글 가져오기
-export async function fetchComment(postId: number): Promise<Comment[]> {
+export async function fetchComments(postId: number): Promise<Comment[]> {
   // Vanila js 활용(Next.js 의 fetch 아님)
   const response = await fetch(
     `https://jsonplaceholder.typicode.com/posts/${postId}/comments`
@@ -385,10 +388,1424 @@ export async function deletePost(id: number): Promise<void> {
 - `/src/hooks` 폴더 생성
 - `/src/hooks/useUsers.ts` 파일 생성
 
+```ts
+// 사용자 목록을 관리하는 React Query 훅
+// 사용자 목록을 가져오고 관리하는 기능을 제공함.
+// React Query 의  useQuery 를 활용함.
+// 캐싱, 로딩, 에러 처리를 자동화 함.
+
+import { fetchUser, fetchUsers } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+
+/* 사용자 목록 가져오기
+ * - 사용자 목록 자동 로딩
+ * - 로딩 상태 관리
+ * - 에러 상태 관리
+ * - 데이터 캐싱
+ * - 자동 리페치
+ **/
+export function useUsers() {
+  // useQuery :  정보가져오기
+  return useQuery({
+    // 쿼리 키 : 데이터 캐싱 구별을 위한 키값을 설정
+    queryKey: ['users'],
+    // 쿼리함수 : 실제 데이터를 가져오는 함수 연결
+    queryFn: fetchUsers,
+    // 쿼리 개별 옵션
+    staleTime: 5 * 60 * 1000, // 5분간은 호출을 막는다. 즉 fresh 유지
+    gcTime: 10 * 60 * 1000, // 10분간 캐시를 유지함.
+  });
+}
+// 각 사용자, 즉 특정 사용자 정보 가져오는 훅
+export function useUser(id: number) {
+  // ID 가 유효한지 검사 (id가 null, undefined, 0 이하면 )
+  const isValidId = (id: number) => {
+    return id !== null && id !== undefined && id > 0;
+  };
+  // useQuery : 정보 호출
+  return useQuery({
+    // 쿼리의 구분을 위한 key 생성
+    queryKey: ['users', id],
+    // 실행할 함수
+    queryFn: () => fetchUser(id),
+    // 사용자 ID 가 null, undefined, 0 보다작으면 실행하지 않도록
+    enabled: isValidId(id),
+    // 쿼리옵션
+    staleTime: 5 * 60 * 1000, // 5분간은 호출을 막는다. 즉 fresh 유지
+    gcTime: 10 * 60 * 1000, // 10분간 캐시를 유지함.
+  });
+}
+// 사용자와 해당 사용자의 게시글을 함께 가져오는 훅
+export function useUserWithPosts() {
+  // 먼저 사용자 목록을 가져옴
+  const usersQuery = useUsers();
+
+  // 사용자 목록이 성공적으로 로드가 된 경우에만 게시글 가져옴
+  const postsQueries = useQuery({
+    // Query 구분용 Key 생성
+    queryKey: ['users', 'posts'],
+    // 호출시 실행할 함수 생성
+    queryFn: async () => {
+      // 사용자들이 없다면 비어있는 배열을 리턴한다.
+      // 상위에서 if 문등의 조건을 이용하면 정확히 자료가 있다는
+      // 타입좁히기 또는 타입가드가 적용됨
+      if (!usersQuery.data || usersQuery.data.length === 0) return [];
+
+      // 사용자들이 있다면 모든 사용자의 게시글을 가져옴
+      // 여러명의 사용자가 있을 것이다. 그래서 병렬로 자료를 가져옴
+      const postsPromises = usersQuery.data.map(user =>
+        fetch(
+          `https://jsonplaceholder.typicode.com/posts?userId=${user.id}`
+        ).then(res => res.json())
+      );
+
+      const allPosts = await Promise.all(postsPromises);
+
+      // 사용자별 게시글을 그룹화한다.
+      return usersQuery.data.map((user, index) => ({
+        ...user,
+        posts: allPosts[index],
+      }));
+    },
+    // 사용자 목록이 성공적으로 로드된 경우에만 실행하라
+    enabled: usersQuery.isSuccess,
+  });
+
+  return {
+    ...postsQueries,
+    // 원본 사용자 쿼리 정보도 함께 반환
+    usersQuery,
+  };
+}
+```
+
 ### 6.3. 게시글 관련 훅
 
 - `/src/hooks/usePosts.ts` 파일 생성
 
+```ts
+// 게시글을 관리하는 React Query 훅
+
+import {
+  createPost,
+  deletePost,
+  fetchPost,
+  fetchPosts,
+  Post,
+  updatePost,
+} from '@/lib/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { error } from 'console';
+
+// 게시글 목록을 가져오는 훅
+export function usePosts(userId?: number) {
+  // useQuery : 정보 가져오기
+  return useQuery({
+    // 쿼리구분용 Key 생성
+    // 사용자 ID가 있으면 포함하여 캐시 키 생성
+    // 사용자 ID가 없으면 정해진 캐시 키 생성
+    queryKey: userId ? ['posts', 'user', userId] : ['posts'],
+    // 쿼리함수 : API를 사용자 ID에 따라서 호출해줌
+    queryFn: () => fetchPosts(userId),
+    // 쿼리 개별 옵션
+    staleTime: 5 * 60 * 1000, // 5분간은 호출을 막는다. 즉 fresh 유지
+    gcTime: 10 * 60 * 1000, // 10분간 캐시를 유지함
+  });
+}
+
+// 특정 게시글 정보를 가져오는 훅
+export function usePost(id: number) {
+  return useQuery({
+    queryKey: ['posts', id],
+    queryFn: () => fetchPost(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+// 새글을 등록하는 훅
+export function useCreatePost() {
+  // 꼭 알아두자
+  // 아래 구분은 React Query 의 데이터 저장소에 접근하기 위한 훅
+  // 서버에서 가져온 데이터를 관리하는 관리자를 불러옴
+  // 내부적으로 useQuery, useMutation 훅이 관리하는 캐시를 전체 관리하는 훅
+  const queryClient = useQueryClient();
+
+  // useMutation : 데이터 생성, 업데이트, 삭제 등..
+  return useMutation({
+    // 뮤테이션 함수 : API 를 이용한 새 게시글 생성 함수 연결
+    mutationFn: createPost,
+    // 성공시 실행되는 함수
+    onSuccess: newPost => {
+      // 게시글 목록 쿼리들을 무효화해서 최신 데이터를 다시 가져오도록 함
+      // 아래 구문은 특정 쿼리 키의 캐시를 무효화 함
+      // React Query 가 자동으로 최신 데이터를 다시 가져오게 하는 함수
+      // 지금 캐시에 저장된 posts 가 오래 되었으니, 다시 서버에서 가져와라
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+      // 새로 생성된 게시글을  캐시에 추가
+      // 아래 구분은 서버에서 다시 데이터를 가져오지 않고, 캐시 데이터를 직접 수정함
+      // 사용자가 새로고침 하지 않아도 최신 내용이 보여지도록 함
+      queryClient.setQueryData(['posts', newPost.id], newPost);
+    },
+    // 에러시 실행되는 함수
+    onError: error => {
+      console.log('글 등록 실패했어요.', error);
+    },
+  });
+}
+
+// 글을 수정하는 훅
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+  // useMutaion: 데이터 생성, 업데이트, 삭제 등..
+  return useMutation({
+    // 뮤테이션 함수 : API 를 이용한 게시글 업데이트 함수 연결
+    // Partial 제네릭은 모든 객체 속성을 Optional 로 변환 즉, ? 를 모두 붙여줌
+    /*
+    export interface Post {
+        id: number;   // 필수
+        userId: number; // 필수
+        title: string; // 필수
+        body: string; // 필수
+    }
+    */
+    // Partial<Post> 적용시
+    /*
+    export interface Post {
+        id?: number;   // 옵션
+        userId?: number; // 옵션
+        title?: string; // 옵션
+        body?: string; // 옵션
+    }
+    */
+
+    mutationFn: ({ id, post }: { id: number; post: Partial<Post> }) =>
+      updatePost(id, post),
+    // 성공시
+    onSuccess: updatePost => {
+      // 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: ['posts', updatePost.id] });
+      // 게시글 목록 쿼리들도 무효화
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      //  수정된 게시글들을 캐시에 업데이트
+      queryClient.setQueryData(['posts', updatePost.id], updatePost);
+    },
+    // 실패시
+    onError: error => {
+      console.log('글 수정에 실패했습니다.', error);
+    },
+  });
+}
+
+// 게시글 삭제
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // 다음처럼 사용하기 위해서 정의함
+    // const deleteMutation = useDeletePost();
+    // deleteMutation.mutate(123)
+    mutationFn: deletePost,
+
+    // 아래는 참고사항
+    // const deleteMutation = useDeletePost(123);
+    // deleteMutation.mutate()
+    // mutationFn: () => deletePost(id),
+
+    // 성공시
+    // 아래도 기억을 합시다.
+    // 첫번째 매개변수 _ 의 의미는 mutation 의 결과를 말함
+    // _ 의 코딩상 의미는 사용하지 않는 변수이다를 표현함
+    // deletePost 함수 API 는 결과를 리턴하는 것이 없다.
+    // 사용하지 않는 리턴 결과임을 표현하기 위해서 _ 를 사용함
+
+    // 아래 첫번째 매개변수 : _ 결과값
+    // 두번째 매개변수 deletedId 는 deletePost(매개변수) 에 전달한 매개변수를 참조함
+    // deleteMutation.mutate(123)
+
+    onSuccess: (_, deletedId) => {
+      // 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: ['posts', deletedId] });
+      // 목록 갱신을 위해서 캐시를 지움
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+    // 실패시
+    onError: error => {
+      console.log('삭제에 실패했어요', error);
+    },
+  });
+}
+
+// 게시글과 댓글을 함께 가져오는 훅
+export function usePostWithComments(userId?: number) {
+  // 먼저 게시글 목록을 가져옴
+  const postsQuery = usePosts(userId);
+
+  // 게시글 목록이 성공적으로 로드된 경우에만 댓글을 가져옴
+  const commentsQuery = useQuery({
+    queryKey: ['posts', 'comments', userId],
+    queryFn: async () => {
+      if (!postsQuery.data) return [];
+
+      // 모든 게시글의 댓글을 병렬로 가져옴
+      const commentsPromises = postsQuery.data.map(post =>
+        fetch(
+          `https://jsonplaceholder.typicode.com/posts/${post.id}/comments`
+        ).then(res => res.json())
+      );
+
+      const allComments = await Promise.all(commentsPromises);
+      return postsQuery.data.map((post, index) => ({
+        ...post,
+        comments: allComments[index],
+      }));
+    },
+    // 게시글 목록이 성공적으로 로드된 경우만 실행
+    enabled: postsQuery.isSuccess,
+  });
+
+  return {
+    ...commentsQuery,
+    // 원본 게시글 쿼리 정보도 함께 반환
+    postsQuery,
+  };
+}
+```
+
 ### 6.4. 할일 관련 훅
 
 - `/src/hooks/useTodos.ts` 파일 생성
+
+```ts
+// 할일을 관리하는 React Query 훅
+
+import { fetchTodos, Todo } from '@/lib/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { error } from 'console';
+
+// 할일 목록 가져오기
+export function useTodos(userId?: number) {
+  return useQuery({
+    queryKey: userId ? ['todos', 'user', userId] : ['todos'],
+    queryFn: () => fetchTodos(userId),
+    staleTime: 1 * 60 * 1000, // 1분간은 호출을 막는다. 즉 fresh 유지
+    gcTime: 5 * 60 * 1000, // 5분간 캐시를 유지함
+  });
+}
+
+// 완료 상태로 할일을 필터링 하는 훅
+export function useTodaysByStatus(userId: number, completed: boolean) {
+  return useQuery({
+    queryKey: ['todos', 'user', userId, 'status', completed],
+    queryFn: async () => {
+      const todos = await fetchTodos(userId);
+      // 환료 상태가 지정된 경우 필터링
+      // completed === true : 완료
+      // completed === false : 미완료
+      // completed === undefined : 모두
+      if (completed !== undefined) {
+        return todos.filter(todo => todo.completed === completed);
+      }
+      return todos;
+    },
+    staleTime: 1 * 60 * 1000, // 1분간은 호출을 막는다. 즉 fresh 유지
+    gcTime: 5 * 60 * 1000, // 5분간 캐시를 유지함
+  });
+}
+
+// 할일 통계 정보를 가져오는 훅
+export function useTodoStats(userId?: number) {
+  const todosQuery = useTodos(userId);
+
+  return {
+    ...todosQuery,
+    // 통계 데이터 계산
+    data: todosQuery.data
+      ? {
+          total: todosQuery.data.length,
+          completed: todosQuery.data.filter(todo => todo.completed).length,
+          pending: todosQuery.data.filter(todo => !todo.completed).length,
+          completionRate:
+            todosQuery.data.length > 0
+              ? (todosQuery.data.filter(todo => todo.completed).length /
+                  todosQuery.data.length) *
+                100
+              : 0,
+        }
+      : undefined,
+  };
+}
+
+// 새 할일 생성하는 뮤테이션 훅
+export function useCreateTodo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (todo: Omit<Todo, 'id'>) => {
+      // 실제 API 테스트 못하므로 데모용
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { ...todo, id: Math.random() * 1000 };
+    },
+    onSuccess: newTodo => {
+      // 할일 목록 쿼리들을 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+
+      // 새로 생성된 할일을 캐시에 추가
+      queryClient.setQueryData(['todos', newTodo.id], newTodo);
+    },
+    onError: error => {
+      console.log('할일 생성에 실패했어요.', error);
+    },
+  });
+}
+
+// 할일을 수정하는 뮤테이션 훅
+export function useUpdateTodo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: number;
+      updates: Partial<Todo>;
+    }) => {
+      // 실제 API 테스트 못하므로 데모용
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { id, ...updates };
+    },
+    onSuccess: updatedTodo => {
+      // 해당 할일 쿼리를 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos', updatedTodo.id] });
+      // 할일 목록 쿼리들도 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      // 수정된 할일을 캐시에 업데이트
+      queryClient.setQueryData(['todos', updatedTodo.id], updatedTodo);
+    },
+    onError: error => {
+      console.log('업데이트에 실패했습니다.', error);
+    },
+  });
+}
+
+// 할일 삭제하는 뮤테이션 훅
+export function useDeleteTodo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      // 실제 API 테스트 못하므로 데모용
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return id;
+    },
+    onSuccess: deleteId => {
+      // 해당 할일 쿼리를 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos', deleteId] });
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+    onError: error => {
+      console.log('삭제에 실패했습니다.', error);
+    },
+  });
+}
+
+// 할일 토글 뮤테이션 훅
+export function useToggleTodo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      // 실제 API 테스트 못하므로 데모용으로
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // 현재 할일 정보를 가져와서 상태를 토글
+      // 아래 내용 즉, getQueryData 의 용도를 파악해 두자.
+      // - api 호출 없이 React Query 의 캐시데이터를 직접 가져오는 방법
+      const currentTodos = queryClient.getQueryData<Todo[]>(['todos']);
+      const todo = currentTodos?.find(item => item.id === id);
+
+      if (!todo) {
+        throw new Error('없는 Todo 입니다.');
+      }
+      return {
+        ...todo,
+        completed: !todo.completed,
+      };
+    },
+    onSuccess: toggledTodo => {
+      // 해당 할일 쿼리를 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos', toggledTodo.id] });
+      // 할일 목록 쿼리를 무효화
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      // 토글된 할일을 캐시에 업데이트
+      queryClient.setQueryData(['todos', toggledTodo.id], toggledTodo);
+    },
+    onError: error => {
+      console.log('토글에 실패했습니다.', error);
+    },
+  });
+}
+```
+
+## 7. React Query 와 Zustand 통합
+
+### 7.1. 통합 훅 만들기
+
+- `/src/stores/queryStore.ts` 파일 생성
+
+```ts
+// React Query 의 상태를 Zustand 에서 관리하기 위한 스토어
+
+import { QueryState } from '@/types/types';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+// 1. 타입 정의
+// interface QueryState {
+//   // State
+//   selectedUserId: number | null; // 현재 선택된 사용자 ID
+//   selectedPostId: number | null; // 현재 선택된 게시글 ID
+//   // Action
+//   setSelectedUserId: (userId: number | null) => void; // 선택된 사용자 ID 설정
+//   setSelectedPostId: (postId: number | null) => void; // 선택된 게시글 ID 설정
+// }
+// 2. localStorage 로 생성
+const queryLocalState = create<QueryState>()(
+  persist(
+    (set, get) => ({
+      // 초기 state 설정
+      selectedUserId: null, // 처음에 선택된 사용자 ID 없음
+      selectedPostId: null, // 처음에 선택된 게시글 ID 없음
+      // 초기 Action 기능 설정
+      setSelectedUserId: (userId: number | null) => {
+        set({ selectedUserId: userId });
+      },
+      setSelectedPostId: (postId: number | null) => {
+        set({ selectedPostId: postId });
+      },
+    }),
+    {
+      name: 'query-storage', // localStorage 에 저장될 키 이름
+      partialize: () => {
+        // localStorage 에 보관할 state 지정 가능
+      },
+    }
+  )
+);
+// 3. 훅 정의
+export const useQueryStore = () => {
+  const {
+    selectedPostId,
+    setSelectedPostId,
+    selectedUserId,
+    setSelectedUserId,
+  } = queryLocalState();
+  return {
+    selectedPostId,
+    setSelectedPostId,
+    selectedUserId,
+    setSelectedUserId,
+  };
+};
+```
+
+- `/src/hooks/useQueryIntegration.ts` 파일 생성
+
+```ts
+// React Query 와 Zustand 통합 훅
+
+import { fetchPosts, fetchUser } from '@/lib/api';
+import { useQueryStore } from '@/stores/queryStore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+// 선택된 사용자 정보를 가져온느 훅
+export function useSelectedUser() {
+  // 사용자 정보를 zustand 로 관리
+  const { selectedUserId } = useQueryStore();
+
+  return useQuery({
+    queryKey: ['users', selectedUserId],
+    queryFn: () => fetchUser(selectedUserId!),
+    enabled: !!selectedUserId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+// 선택된 게시글 정보를 가져오는 훅
+export function useSelectedPost() {
+  // 게시글 정보를 zustand 로 관리
+  const { selectedPostId } = useQueryStore();
+
+  return useQuery({
+    queryKey: ['posts', selectedPostId],
+    queryFn: () => fetchUser(selectedPostId!),
+    enabled: !!selectedPostId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+// 사용자 선택 기능을 제공하는 훅
+export function useUserSelection() {
+  const { selectedUserId, setSelectedUserId } = useQueryStore();
+  // 선택된 사용자 정보를 가져오는 훅
+  const selectdUserQuery = useSelectedUser();
+  return {
+    // 상태
+    selectedUserId,
+    selectedUser: selectdUserQuery.data, // 사용자 데이터
+    isLoading: selectdUserQuery.isLoading, // 로딩 상태
+    error: selectdUserQuery.error, // 에러 상태
+
+    // 액션들
+    selectUser: (userId: number) => setSelectedUserId(userId),
+    clearSelection: () => setSelectedUserId(null),
+
+    // 쿼리 정보
+    query: selectdUserQuery,
+  };
+}
+
+// 쿼리 프리패치를 위한 훅
+// - 사용자가 특정 데이터를 필요로 할 것이라고 예상해서
+// - 미리 데이터를 가져와서 캐시에 저장하는 프리패치 기능
+export function usePrefetchQuery() {
+  // React Query 의 전역 캐시(useQuery, useMutation) 를 관리함
+  const queryClient = useQueryClient();
+  return {
+    // 1. 사용자 정보를 미리 캐시에 보관함 (프리패치)
+    prefetchUser: (userId: number) => {
+      queryClient.prefetchQuery({
+        queryKey: ['users', userId],
+        queryFn: () => fetchUser(userId),
+        staleTime: 5 * 60 * 1000, // 5분 stale 상태
+      });
+    },
+    // 2. 사용자의 게시글을 미리 캐시에 보관함
+    prefetchUserPosts: (userId: number) => {
+      queryClient.prefetchQuery({
+        queryKey: ['posts', 'user', userId],
+        queryFn: () => fetchPosts(userId),
+        staleTime: 2 * 60 * 1000, // 2분 stale 상태
+      });
+    },
+  };
+}
+```
+
+### 7.2. 컴포넌트 생성 및 적용하고 테스트하기
+
+- `/src/components/UsersList.tsx` 파일 생성
+- 사용자 목록
+
+```tsx
+// 사용자 목록 컴포넌트
+// useQuery 를 사용해서 사용자 목록가져오고 표시함
+// 로딩상태, 에러상태, 데이터 표시 처리
+'user client';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+import { useUsers } from '@/hooks/useUsers';
+
+const UsersList = () => {
+  // 사용자 목록 가져오기
+  // useQuery 를 활용하면 리턴으로 다양한 정보 객체를 전달해줌
+  // data 는 리턴되는 값, isLoading 로딩상태, error 에러
+  const { data: users, isLoading, error } = useUsers();
+
+  // 사용자 선택 기능을 가져오기
+  const { selectedUserId, selectUser, clearSelection } = useUserSelection();
+
+  // 상황에 따라서 출력을 다르게 함
+  // 로딩 상태일 때
+  if (isLoading) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+  // 에러 상태일 때
+  if (error) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-4'>
+      {/* 컴포넌트 제목 */}
+      <div className='flex justify-between items-center'>
+        <h2 className='text-2xl font-bold text-gray-800'>
+          Users List ({users?.length || 0})
+        </h2>
+
+        {/* 선택된 사용자가 있을 때 선택 해제 버튼 */}
+        {selectedUserId && (
+          <button
+            onClick={clearSelection}
+            className='px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors'
+          >
+            Clear Selection
+          </button>
+        )}
+      </div>
+
+      {/* 사용자 목록 */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+        {users?.map(user => (
+          <div
+            key={user.id}
+            className={`p-4 border rounded-lg cursor-pointer transition-all ${
+              selectedUserId === user.id
+                ? 'border-blue-500 bg-blue-50 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+            }`}
+            onClick={() => selectUser(user.id)}
+          >
+            {/* 사용자 기본 정보 */}
+            <div className='space-y-2'>
+              <h3 className='font-semibold text-gray-800'>{user.name}</h3>
+              <p className='text-sm text-gray-600'>{user.email}</p>
+              <p className='text-sm text-gray-500'>{user.phone}</p>
+
+              {/* 회사 정보 */}
+              <div className='pt-2 border-t border-gray-100'>
+                <p className='text-xs text-gray-500'>Company</p>
+                <p className='text-sm font-medium text-gray-700'>
+                  {user.company.name}
+                </p>
+                <p className='text-xs text-gray-500 italic'>
+                  &ldquo;{user.company.catchPhrase}&rdquo;
+                </p>
+              </div>
+
+              {/* 웹사이트 */}
+              <div className='pt-2'>
+                <a
+                  href={`https://${user.website}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-xs text-blue-600 hover:text-blue-800 hover:underline'
+                  onClick={e => e.stopPropagation()} // 부모 클릭 이벤트 방지
+                >
+                  {user.website}
+                </a>
+              </div>
+            </div>
+
+            {/* 선택 상태 표시 */}
+            {selectedUserId === user.id && (
+              <div className='mt-3 pt-2 border-t border-blue-200'>
+                <div className='flex items-center text-blue-600'>
+                  <svg
+                    className='w-4 h-4 mr-1'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                  <span className='text-sm font-medium'>Selected</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 사용자 목록이 비어있을 때 */}
+      {users?.length === 0 && (
+        <div className='text-center py-8 text-gray-500'>
+          <p>No users found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UsersList;
+```
+
+- `/src/components/UserDetail.tsx` 파일 생성
+- 사용자 상세정보
+
+```tsx
+// 선택된 사용자의 상세 정보를 표시하는 컴포넌트
+'use client';
+
+import { usePosts } from '@/hooks/usePosts';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+
+const UserDetail = () => {
+  // 선택된 사용자 정보를 가져옴
+  const {
+    selectedUserId,
+    selectedUser,
+    isLoading: userLoading,
+    error: userError,
+  } = useUserSelection();
+
+  // 선택된 사용자 게시글 가져옴
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    error: postsError,
+  } = usePosts(selectedUserId || undefined);
+
+  // 사용자가 선택되지 않았을 때 안내 메시지
+  if (!selectedUserId) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center text-gray-500'>
+          <div className='mb-4'>
+            <svg
+              className='w-16 h-16 mx-auto text-gray-300'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={1}
+                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+              />
+            </svg>
+          </div>
+          <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+            No User Selected
+          </h3>
+          <p className='text-sm'>
+            Please select a user from the list to view their details
+          </p>
+        </div>
+      </div>
+    );
+  }
+  // 사용자 정보가 있으면 사용자 상세 정보 로딩중..
+  if (userLoading) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading user details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 사용자 정보 가져오다가 에러라면
+  if (userError) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center text-red-600'>
+          <p className='text-lg font-semibold'>Error loading user</p>
+          <p className='text-sm mt-1'>{userError.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 사용자 정보 및 posts 출력
+
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6'>
+      {/* 사용자 기본 정보 */}
+      <div className='border-b border-gray-200 pb-6'>
+        <h2 className='text-2xl font-bold text-gray-800 mb-4'>User Details</h2>
+
+        {selectedUser && (
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            {/* 기본 정보 */}
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+                  Basic Information
+                </h3>
+                <div className='space-y-2'>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Name:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.name}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Email:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.email}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Phone:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.phone}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Website:
+                    </span>
+                    <a
+                      href={`https://${selectedUser.website}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-blue-600 hover:text-blue-800 hover:underline'
+                    >
+                      {selectedUser.website}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 회사 정보 */}
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+                  Company Information
+                </h3>
+                <div className='space-y-2'>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Company:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.company.name}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Catch Phrase:
+                    </span>
+                    <p className='text-gray-800 italic'>
+                      &ldquo;{selectedUser.company.catchPhrase}&rdquo;
+                    </p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Business:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.company.bs}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 사용자의 게시글 목록 */}
+      <div>
+        <h3 className='text-xl font-semibold text-gray-700 mb-4'>
+          Posts ({posts?.length || 0})
+        </h3>
+
+        {/* 게시글 로딩 중 */}
+        {postsLoading && (
+          <div className='text-center py-4'>
+            <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto'></div>
+            <p className='mt-2 text-sm text-gray-600'>Loading posts...</p>
+          </div>
+        )}
+
+        {/* 게시글 에러 */}
+        {postsError && (
+          <div className='text-center text-red-600 py-4'>
+            <p className='text-sm'>Error loading posts: {postsError.message}</p>
+          </div>
+        )}
+
+        {/* 게시글 목록 */}
+        {posts && posts.length > 0 && (
+          <div className='space-y-4'>
+            {posts.map(post => (
+              <div
+                key={post.id}
+                className='p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all'
+              >
+                <h4 className='font-semibold text-gray-800 mb-2'>
+                  {post.title}
+                </h4>
+                <p className='text-gray-600 text-sm leading-relaxed'>
+                  {post.body}
+                </p>
+                <div className='mt-3 pt-3 border-t border-gray-100'>
+                  <span className='text-xs text-gray-500'>
+                    Post ID: {post.id}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 게시글이 없을 때 */}
+        {posts && posts.length === 0 && !postsLoading && (
+          <div className='text-center py-8 text-gray-500'>
+            <p>No posts found for this user</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default UserDetail;
+```
+
+- `/src/components/Postmanager.tsx` 파일 생성
+- 게시글 관리
+
+```tsx
+// 게시글 CRUD
+// useQuery 와 useMutaion 활용
+'use client';
+
+import {
+  useCreatePost,
+  useDeletePost,
+  usePosts,
+  useUpdatePost,
+} from '@/hooks/usePosts';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+import { useState } from 'react';
+
+const Postmanager = () => {
+  // 선택된 사용자 정보
+  const { selectedUserId } = useUserSelection();
+  // 게시글 목록을 가져옴
+  const {
+    data: posts,
+    isLoading,
+    error,
+  } = usePosts(selectedUserId || undefined);
+
+  // Mutation 훅들
+  const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
+  const deletePostMutation = useDeletePost();
+
+  // 컴포넌트 활용 state
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newPost, setNewPost] = useState({ title: '', body: '' });
+  const [editPost, setEditPost] = useState({ title: '', body: '' });
+
+  // 새 게시글 생성 처리
+  const handleCreatePost = async () => {
+    if (!newPost.title.trim() || !newPost.body.trim()) {
+      return;
+    }
+    try {
+      // Mutaion객체.mutateAsync : 비동기로 뮤테이션을 실행하는 함수이다.
+      await createPostMutation.mutateAsync({
+        // number 가 들어와야 해요.
+        userId: selectedUserId || 1,
+        title: newPost.title,
+        body: newPost.body,
+      });
+      // 성공시 내용 초기화
+      setNewPost({ title: '', body: '' });
+      setIsCreating(false);
+    } catch (error) {
+      console.log('새 글 등록 실패:', error);
+    }
+  };
+
+  // 게시글 수정 처리
+  const handleUpdatePost = async (id: number) => {
+    if (!editPost.title.trim() || !editPost.body.trim()) {
+      return;
+    }
+    try {
+      await updatePostMutation.mutateAsync({
+        id,
+        post: {
+          title: editPost.title,
+          body: editPost.body,
+        },
+      });
+
+      // 성공시
+      setEditPost({ title: '', body: '' });
+      setEditingId(null);
+    } catch (error) {
+      console.log('수정에 실패했습니다 : ', error);
+    }
+  };
+
+  // 게시글 삭제 처리
+  const handleDeletePost = async (id: number) => {
+    if (!confirm('게시글을 삭제하시겠습니까?')) {
+      return;
+    }
+    try {
+      await deletePostMutation.mutateAsync(id);
+    } catch (error) {
+      console.log('삭제 실패 : ', error);
+    }
+  };
+
+  // 게시글 편집 시작
+  const startEdit = (post: any) => {
+    setEditingId(post.id);
+    setEditPost({ title: post.title, body: post.body });
+  };
+
+  // 게시글 편집 취소
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditPost({ title: '', body: '' });
+  };
+
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6'>
+      {/* 컴포넌트 제목 */}
+      <div className='flex justify-between items-center'>
+        <h2 className='text-2xl font-bold text-gray-800'>Posts Manager</h2>
+
+        {/* 새 게시글 생성 버튼 */}
+        <button
+          onClick={() => setIsCreating(true)}
+          className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
+        >
+          Create New Post
+        </button>
+      </div>
+
+      {/* 새 게시글 생성 폼 */}
+      {isCreating && (
+        <div className='p-4 border border-blue-200 rounded-lg bg-blue-50'>
+          <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+            Create New Post
+          </h3>
+          <div className='space-y-4'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>
+                Title
+              </label>
+              <input
+                type='text'
+                value={newPost.title}
+                onChange={e =>
+                  setNewPost({ ...newPost, title: e.target.value })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                placeholder='Enter post title...'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>
+                Content
+              </label>
+              <textarea
+                value={newPost.body}
+                onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                rows={4}
+                className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                placeholder='Enter post content...'
+              />
+            </div>
+            <div className='flex space-x-2'>
+              <button
+                onClick={handleCreatePost}
+                disabled={createPostMutation.isPending}
+                className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 transition-colors'
+              >
+                {createPostMutation.isPending ? 'Creating...' : 'Create Post'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsCreating(false);
+                  setNewPost({ title: '', body: '' });
+                }}
+                className='px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게시글 목록 */}
+      <div>
+        <h3 className='text-lg font-semibold text-gray-700 mb-4'>
+          Posts ({posts?.length || 0})
+        </h3>
+
+        {/* 로딩 상태 */}
+        {isLoading && (
+          <div className='text-center py-8'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+            <p className='mt-2 text-gray-600'>Loading posts...</p>
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div className='text-center text-red-600 py-8'>
+            <p className='text-lg font-semibold'>Error loading posts</p>
+            <p className='text-sm mt-1'>{error.message}</p>
+          </div>
+        )}
+
+        {/* 게시글 목록 */}
+        {posts && posts.length > 0 && (
+          <div className='space-y-4'>
+            {posts.map(post => (
+              <div
+                key={post.id}
+                className='p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all'
+              >
+                {editingId === post.id ? (
+                  // 편집 모드
+                  <div className='space-y-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Title
+                      </label>
+                      <input
+                        type='text'
+                        value={editPost.title}
+                        onChange={e =>
+                          setEditPost({ ...editPost, title: e.target.value })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Content
+                      </label>
+                      <textarea
+                        value={editPost.body}
+                        onChange={e =>
+                          setEditPost({ ...editPost, body: e.target.value })
+                        }
+                        rows={3}
+                        className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      />
+                    </div>
+                    <div className='flex space-x-2'>
+                      <button
+                        onClick={() => handleUpdatePost(post.id)}
+                        disabled={updatePostMutation.isPending}
+                        className='px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:opacity-50 transition-colors'
+                      >
+                        {updatePostMutation.isPending ? 'Saving...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className='px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors'
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // 표시 모드
+                  <div>
+                    <h4 className='font-semibold text-gray-800 mb-2'>
+                      {post.title}
+                    </h4>
+                    <p className='text-gray-600 text-sm leading-relaxed mb-3'>
+                      {post.body}
+                    </p>
+                    <div className='flex justify-between items-center'>
+                      <span className='text-xs text-gray-500'>
+                        Post ID: {post.id}
+                      </span>
+                      <div className='flex space-x-2'>
+                        <button
+                          onClick={() => startEdit(post)}
+                          className='px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 transition-colors'
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={deletePostMutation.isPending}
+                          className='px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 disabled:opacity-50 transition-colors'
+                        >
+                          {deletePostMutation.isPending
+                            ? 'Deleting...'
+                            : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 게시글이 없을 때 */}
+        {posts && posts.length === 0 && !isLoading && (
+          <div className='text-center py-8 text-gray-500'>
+            <p>No posts found</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Postmanager;
+```
+
+- `/src/components/ReactQueryDemo.tsx` 파일 생성
+
+```tsx
+// 테스트 컴포넌트
+'use client';
+
+import { usePrefetchQuery } from '@/hooks/useQueryIntegration';
+import { useState } from 'react';
+import UsersList from './UsersList';
+import UserDetail from './UserDetail';
+import Postmanager from './Postmanager';
+
+function ReactQueryDemo() {
+  // 프리패치 기능으로 데이터를 사용자가 필요한 것을 예측 캐싱
+  const { prefetchUser, prefetchUserPosts, prefetchPost } = usePrefetchQuery();
+
+  // 컴포넌트 상태로서 프리패치 데모용
+  const [prefetchUserId, setPrefetchUserId] = useState(1);
+  const [prefetchPostId, setPrefetchPostId] = useState(1);
+
+  return (
+    <div className='min-h-screen bg-gray-100 py-8'>
+      <div className='max-w-7xl mx-auto px-4'>
+        {/* 페이지 헤더 */}
+        <div className='text-center mb-8'>
+          <h1 className='text-4xl font-bold text-gray-800 mb-4'>
+            React Query Demo
+          </h1>
+          <p className='text-lg text-gray-600'>
+            React Query를 활용한 현대적인 서버 상태 관리 예제
+          </p>
+        </div>
+
+        {/* 프리페치 데모 섹션 */}
+        <div className='mb-8 p-6 bg-blue-50 rounded-xl'>
+          <h2 className='text-xl font-semibold text-blue-800 mb-4'>
+            🚀 Prefetch Demo
+          </h2>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            {/* 사용자 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch User
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchUserId}
+                  onChange={e => setPrefetchUserId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='User ID'
+                />
+                <button
+                  onClick={() => prefetchUser(prefetchUserId)}
+                  className='w-full px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors'
+                >
+                  Prefetch User
+                </button>
+              </div>
+            </div>
+
+            {/* 게시글 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch Post
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchPostId}
+                  onChange={e => setPrefetchPostId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='Post ID'
+                />
+                <button
+                  onClick={() => prefetchPost(prefetchPostId)}
+                  className='w-full px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors'
+                >
+                  Prefetch Post
+                </button>
+              </div>
+            </div>
+
+            {/* 사용자 게시글 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch User Posts
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchUserId}
+                  onChange={e => setPrefetchUserId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='User ID'
+                />
+                <button
+                  onClick={() => prefetchUserPosts(prefetchUserId)}
+                  className='w-full px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition-colors'
+                >
+                  Prefetch Posts
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 메인 콘텐츠 그리드 */}
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+          {/* 사용자 목록 */}
+          <div>
+            <UsersList />
+          </div>
+
+          {/* 선택된 사용자 상세 정보 */}
+          <div>
+            <UserDetail />
+          </div>
+        </div>
+
+        {/* 게시글 관리 섹션 */}
+        <div className='mt-8'>
+          <Postmanager />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ReactQueryDemo;
+```
+
+- `/src/app/page.tsx` 배치
+
+```tsx
+import ReactQueryDemo from '@/components/ReactQueryDemo';
+
+export default function Home() {
+  return (
+    <div>
+      <h2>React Query</h2>
+      <ReactQueryDemo />
+    </div>
+  );
+}
+```

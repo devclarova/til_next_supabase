@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useCounterStore } from "@/stores/CounterStore";
+import { useCounterStore } from '@/stores/CounterStore';
 
 /**
  * Counter - 카운터 기능을 제공하는 React 컴포넌트

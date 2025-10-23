@@ -92,14 +92,14 @@ export async function fetchPost(id: number): Promise<Post> {
   );
 
   if (!response.ok) {
-    throw new Error(`게시글 목록 가져오기 실패`);
+    throw new Error(`${id} 게시글 상세정보 가져오기 실패`);
   }
 
   return response.json();
 }
 
 // 특정 게시글의 댓글 가져오기
-export async function fetchComment(postId: number): Promise<Comment[]> {
+export async function fetchComments(postId: number): Promise<Comment[]> {
   // Vanila js 활용(Next.js 의 fetch 아님)
   const response = await fetch(
     `https://jsonplaceholder.typicode.com/posts/${postId}/comments`

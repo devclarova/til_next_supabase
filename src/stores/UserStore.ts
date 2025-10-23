@@ -1,7 +1,7 @@
 // User Store - zustand 로 카운터 관리
 
 import { User, UserState } from '@/types/types';
-import { create } from 'zustand';
+import { create, useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // 1 단계 - store 타입 정의 (통상 types/types.ts 에 정의)
@@ -21,46 +21,50 @@ import { persist } from 'zustand/middleware';
 // get : state 읽기
 // set : state 쓰기
 
-// 2 단계 1. localStorage가 적용 안된 버전
+// 2 단계 1. localStorage 가 적용 안된 버전
 const userStore = create<UserState>()((set, get) => ({
-  // 초기 상태
+  // 초기상태
   user: null,
   isLoggedIn: false,
   isLoading: false,
+
   // 사용자 정보 업데이트
   login: (user: User) =>
     set({ user: user, isLoggedIn: true, isLoading: false }),
   logout: () => set({ user: null, isLoggedIn: false, isLoading: false }),
-
   updateUser: (userData: Partial<User>) =>
     set(state => ({
       user: state.user ? { ...state.user, ...userData } : null,
     })),
+
   // 로딩 상태 설정
   setLoading: (loading: boolean) => set({ isLoading: loading }),
 }));
 
-// 2 단계 2. localStorage가 적용된 버전
+// 2 단계 2. localStorage 가 적용된 버전
 const userLocalStore = create<UserState>()(
   persist(
     (set, get) => ({
-      // 초기 상태
+      // 초기상태
       user: null,
       isLoggedIn: false,
       isLoading: false,
+
       // 사용자 정보 업데이트
       login: (user: User) =>
         set({ user: user, isLoggedIn: true, isLoading: false }),
       logout: () => set({ user: null, isLoggedIn: false, isLoading: false }),
-
       updateUser: (userData: Partial<User>) =>
         set(state => ({
           user: state.user ? { ...state.user, ...userData } : null,
         })),
+
       // 로딩 상태 설정
       setLoading: (loading: boolean) => set({ isLoading: loading }),
     }),
-    { name: 'user-storage' }
+    {
+      name: 'user-storage',
+    }
   )
 );
 
