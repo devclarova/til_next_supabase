@@ -21,7 +21,6 @@ function SignUp() {
     // supabase 회원가입 처리 코드
     mutate({ email: email, password: password });
   };
-
   return (
     <div className='flex flex-col gap-8'>
       <div className='text-xl font-bold'>회원가입</div>
@@ -47,7 +46,7 @@ function SignUp() {
           className='w-full'
           onClick={handleSignUpClick}
         >
-          {isPending ? '회원 등록 중...' : '회원가입'}
+          {isPending ? '회원등록중...' : '회원가입'}
         </Button>
       </div>
       <div>
