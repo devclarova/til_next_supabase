@@ -92,17 +92,26 @@ export async function fetchPosts({
   from,
   to,
   userId,
+  authorId, // 추가됨
 }: {
   from: number;
   to: number;
   userId: string;
+  authorId?: string; // 추가됨
 }) {
-  const { data, error } = await supabase
+  // authorId 가 있으면 추가적으로   Query 추가
+  // const { data, error } = await supabase
+  const request = supabase
     .from('posts')
     .select('*, author: profiles!author_id(*), myLiked: likes!post_id(*)')
     .eq('myLiked.user_id', userId)
     .order('created_at', { ascending: false })
     .range(from, to);
+
+  // 추가됨.
+  if (authorId) request.eq('author_id', authorId);
+  // 추가됨. await 주의함
+  const { data, error } = await request;
 
   if (error) throw error;
   return data.map(post => ({
