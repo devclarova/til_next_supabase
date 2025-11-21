@@ -73,7 +73,7 @@ export default function RootLayout({
                   {children}
                 </main>
                 <footer className='text-muted-foreground border-t py-10 text-center'>
-                  @devgeact
+                  @devclarova
                 </footer>
               </ModalProvider>
             </SessionProvider>
