@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useEffect } from 'react';
 import EditProfileButton from './EditProfileButton';
 import { useSession } from '@/stores/session';
+import DeleteProfileButton from './DeleteProfileButton';
 
 export default function ProfileInfo({ userId }: { userId: string }) {
   // 세션 정보 참조하기 (zustand 보관됨.)
@@ -43,7 +44,12 @@ export default function ProfileInfo({ userId }: { userId: string }) {
       </div>
 
       {/* 프로필 수정 */}
-      {isMine && <EditProfileButton />}
+      {isMine && (
+        <div>
+          <EditProfileButton />
+          <DeleteProfileButton />
+        </div>
+      )}
     </div>
   );
 }

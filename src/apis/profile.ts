@@ -50,14 +50,10 @@ export async function updateProfile({
 
   // 2. 새로운 아바타 이미지 업로드
   if (avatarImageFile) {
-    // 확장자 알아내기
     const fileExtension = avatarImageFile.name.split('.').pop() || 'webp';
-    // 업로드될 이름이 중복되면 안되므로
     const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
-    // 파일이 업로드 될 경로생성
     const filePath = `${userId}/avatar/${fileName}`;
 
-    // 실제 파일 업로드
     newAvatarUrl = await uploadImage({
       file: avatarImageFile,
       filePath: filePath,
@@ -65,9 +61,22 @@ export async function updateProfile({
   }
 
   // 3. 프로필 테이블 업데이트 작업
+  // 텍스트 필드만 바뀔 때는 기존 avatar_url을 그대로 두기 위한 payload 구성.
+  const payload: {
+    nickname: string;
+    bio?: string;
+    avatar_url?: string | null;
+  } = { nickname, bio };
+
+  if (avatarImageFile) {
+    // 이미지가 새로 업로드된 경우에만 avatar_url을 덮어쓴다.
+    payload.avatar_url = newAvatarUrl;
+  }
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({ nickname, bio, avatar_url: newAvatarUrl })
+    // .update({ nickname, bio, avatar_url: newAvatarUrl })
+    .update(payload)
     .eq('id', userId)
     .select()
     .single();
